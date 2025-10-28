@@ -181,21 +181,32 @@ app.add_middleware(
 setup_logging()""")
         
         if "auth-jwt" in selected_modules:
-            imports.append("from app.routers.auth import router as auth_router")
+            imports.append("from app.api.v1.auth import router as auth_router")
             router_includes.append("app.include_router(auth_router, prefix='/api/v1/auth', tags=['auth'])")
         
         if "file-upload" in selected_modules:
             imports.append("from app.routers.files import router as files_router")
             router_includes.append("app.include_router(files_router, prefix='/api/v1/files', tags=['files'])")
         
-        return f'''{chr(10).join(imports)}
+        return f'''from contextlib import asynccontextmanager
+{chr(10).join(imports)}
+
+@asynccontextmanager
+async def lifespan(app):
+    # Startup
+    from app.database import create_tables
+    create_tables()
+    print("✅ Tables de base de données créées/vérifiées")
+    yield
+    # Shutdown (si nécessaire)
 
 app = FastAPI(
     title="{project_name}",
     description="API générée avec FastWizard 🧙‍♂️",
     version="0.1.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 {chr(10).join(middleware_setup)}
@@ -240,9 +251,20 @@ if __name__ == "__main__":
             "# Configuration de base",
             "APP_NAME=Mon Projet FastAPI",
             "DEBUG=True",
-            "SECRET_KEY=your-secret-key-here",
+            "SECRET_KEY=your-secret-key-here-change-this-in-production",
             ""
         ]
+        
+        # Ajouter les variables JWT si le module auth est sélectionné
+        if "auth-jwt" in selected_modules:
+            env_vars.extend([
+                "# Configuration JWT",
+                "SECRET_KEY=your-super-secret-jwt-key-change-this-in-production",
+                "ALGORITHM=HS256",
+                "ACCESS_TOKEN_EXPIRE_MINUTES=30",
+                "REFRESH_TOKEN_EXPIRE_DAYS=7",
+                ""
+            ])
         
         # Ajouter les variables selon les modules
         if any(module.startswith("db-") for module in selected_modules) and db_config:
@@ -297,10 +319,62 @@ L'API sera disponible sur [http://localhost:8000](http://localhost:8000)
 
 - **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **Adminer (Base de données)**: [http://localhost:8080](http://localhost:8080)
 
 ## 🔧 Modules inclus
 
 {modules_list}
+
+## 🛣️ Routes disponibles
+
+### 🏠 Routes de base
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/` | Page d'accueil |
+| `GET` | `/health` | Vérification de l'état de l'API |
+
+### 🔐 Authentification
+
+| Méthode | Endpoint | Description | Authentification |
+|---------|----------|-------------|------------------|
+| `POST` | `/api/v1/auth/register` | Enregistrement d'un nouvel utilisateur | ✅ |
+| `POST` | `/api/v1/auth/login` | Connexion utilisateur | ✅ |
+| `POST` | `/api/v1/auth/refresh` | Rafraîchissement du token | ✅ |
+| `GET` | `/api/v1/auth/me` | Informations de l'utilisateur actuel | ✅ |
+| `PUT` | `/api/v1/auth/me` | Mise à jour du profil utilisateur | ✅ |
+| `POST` | `/api/v1/auth/change-password` | Changement de mot de passe | ✅ |
+| `GET` | `/api/v1/auth/users` | Liste de tous les utilisateurs | ✅ (Admin) |
+| `DELETE` | `/api/v1/auth/users/{{user_id}}` | Suppression d'un utilisateur | ✅ (Admin) |
+
+
+### 📖 Documentation des routes
+
+Pour une documentation interactive complète :
+- **Swagger UI** : [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc** : [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+### 💡 Exemples d'utilisation
+
+#### Enregistrement d'un utilisateur
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/register" \\
+     -H "Content-Type: application/json" \\
+     -d '{{"username": "testuser", "email": "test@example.com", "password": "password123"}}'
+```
+
+#### Connexion
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/login" \\
+     -H "Content-Type: application/x-www-form-urlencoded" \\
+     -d "username=testuser&password=password123"
+```
+
+#### Accès à une route protégée
+```bash
+curl -X GET "http://localhost:8000/api/v1/auth/me" \\
+     -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
 
 ## 📁 Structure du projet
 
@@ -341,6 +415,18 @@ alembic upgrade head
 # Créer une nouvelle migration
 alembic revision --autogenerate -m "Description"
 ```
+
+### Visualisation de la base de données
+
+Adminer est inclus pour visualiser et gérer la base de données PostgreSQL :
+
+1. Accédez à [http://localhost:8080](http://localhost:8080)
+2. Utilisez les informations de connexion :
+   - **Système** : PostgreSQL
+   - **Serveur** : db
+   - **Utilisateur** : fastapi_user
+   - **Mot de passe** : fastapi_password
+   - **Base de données** : fastapi_db
 
 ## 📝 Notes
 
@@ -475,6 +561,7 @@ Thumbs.db
         """Récupère le contenu d'un template"""
         
         # Essayer de charger le template depuis un fichier
+        # Le template_name peut maintenant contenir un chemin relatif (ex: "auth/auth_jwt_handler")
         template_file = self.templates_dir / f"{template_name.replace('.py', '')}.py"
         
         if template_file.exists():
@@ -523,6 +610,7 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "{port}"]
         
         elif template_name == "docker_compose.py":
             port = config.get("port", 8000)
+            adminer_port = config.get("adminer_port", 8080)
             return f''' 
 
 services:
@@ -550,6 +638,18 @@ services:
       - "5432:5432"
     networks:
       - fastapi-network
+
+  adminer:
+    image: adminer:4.8.1
+    ports:
+      - "{adminer_port}:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    depends_on:
+      - db
+    networks:
+      - fastapi-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

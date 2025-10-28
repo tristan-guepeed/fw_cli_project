@@ -22,9 +22,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copier le code source
 COPY . .
 
-# Créer les répertoires nécessaires
-RUN mkdir -p logs uploads
-
 # Exposer le port
 EXPOSE {port}
 

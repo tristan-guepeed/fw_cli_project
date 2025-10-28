@@ -35,20 +35,60 @@ class ModuleManager:
             files=[
                 {
                     "path": "app/database.py",
-                    "template": "db_postgresql.py"
+                    "template": "database/db_postgresql.py"
                 },
                 {
                     "path": "alembic.ini",
-                    "template": "alembic_ini.py"
+                    "template": "database/alembic_ini.py"
                 },
                 {
                     "path": "alembic/env.py",
-                    "template": "alembic_env.py"
+                    "template": "database/alembic_env.py"
                 }
             ],
             config={
                 "database_url": "postgresql://user:password@localhost/dbname",
                 "echo": False
+            }
+        )
+        
+        # Module Authentification JWT
+        modules["auth-jwt"] = ModuleInfo(
+            id="auth-jwt",
+            name="Authentification JWT",
+            description="Système d'authentification complet avec JWT (register, login, refresh)",
+            dependencies=["python-jose[cryptography]", "passlib[bcrypt]", "python-multipart", "email-validator"],
+            files=[
+                {
+                    "path": "app/auth/jwt_handler.py",
+                    "template": "auth/auth_jwt_handler.py"
+                },
+                {
+                    "path": "app/auth/dependencies.py",
+                    "template": "auth/auth_dependencies.py"
+                },
+                {
+                    "path": "app/models/user.py",
+                    "template": "auth/auth_user_model.py"
+                },
+                {
+                    "path": "app/schemas/auth.py",
+                    "template": "auth/auth_schemas.py"
+                },
+                {
+                    "path": "app/api/v1/auth.py",
+                    "template": "auth/auth_routes.py"
+                },
+                {
+                    "path": "app/core/security.py",
+                    "template": "auth/auth_security.py"
+                }
+            ],
+            config={
+                "secret_key": "your-secret-key-here",
+                "algorithm": "HS256",
+                "access_token_expire_minutes": 30,
+                "refresh_token_expire_days": 7
             }
         )
         
@@ -61,15 +101,15 @@ class ModuleManager:
             files=[
                 {
                     "path": "Dockerfile",
-                    "template": "Dockerfile.py"
+                    "template": "docker/dockerfile.py"
                 },
                 {
                     "path": "docker-compose.yml",
-                    "template": "docker_compose.py"
+                    "template": "docker/docker_compose.py"
                 },
                 {
                     "path": ".dockerignore",
-                    "template": "dockerignore.py"
+                    "template": "docker/dockerignore.py"
                 }
             ],
             config={
@@ -120,5 +160,8 @@ class ModuleManager:
         # Vérifier les dépendances manquantes
         if "crud" in module_ids and not any(mid.startswith("db-") for mid in module_ids):
             warnings.append("Le module CRUD nécessite un module de base de données")
+        
+        if "auth-jwt" in module_ids and not any(mid.startswith("db-") for mid in module_ids):
+            warnings.append("Le module auth-jwt nécessite un module de base de données")
         
         return warnings

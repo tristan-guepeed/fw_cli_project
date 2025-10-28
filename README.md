@@ -61,7 +61,7 @@ fastwizard version
 - **`db-postgresql`** : Configuration PostgreSQL avec SQLAlchemy et Alembic
 
 ### Authentification
-- **A venir**
+- **JWT** : Configuration token et routes d'authentification avec JWT
 
 ### Fonctionnalités
 - **A venir**

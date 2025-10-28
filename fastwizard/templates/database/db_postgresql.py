@@ -14,10 +14,14 @@ load_dotenv()
 # URL de la base de données
 DATABASE_URL = os.getenv("DATABASE_URL", "{database_url}")
 
+# Pour Docker Compose, utiliser le nom du service
+if os.getenv("DOCKER_ENV"):
+    DATABASE_URL = "postgresql://fastapi_user:fastapi_password@db:5432/fastapi_db"
+
 # Créer le moteur SQLAlchemy
 engine = create_engine(
     DATABASE_URL,
-    echo={str(echo).lower()},
+    echo={echo},
     pool_pre_ping=True,
     pool_recycle=300,
 )
