@@ -60,28 +60,32 @@ class ModuleManager:
             dependencies=["python-jose[cryptography]", "passlib[bcrypt]", "python-multipart", "email-validator"],
             files=[
                 {
-                    "path": "app/auth/jwt_handler.py",
+                    "path": "app/domains/auth/jwt_handler.py",
                     "template": "auth/auth_jwt_handler.py"
                 },
                 {
-                    "path": "app/auth/dependencies.py",
+                    "path": "app/domains/auth/dependencies.py",
                     "template": "auth/auth_dependencies.py"
                 },
                 {
-                    "path": "app/models/user.py",
+                    "path": "app/domains/auth/model.py",
                     "template": "auth/auth_user_model.py"
                 },
                 {
-                    "path": "app/schemas/auth.py",
+                    "path": "app/domains/auth/schemas.py",
                     "template": "auth/auth_schemas.py"
                 },
                 {
-                    "path": "app/api/v1/auth.py",
+                    "path": "app/domains/auth/router.py",
                     "template": "auth/auth_routes.py"
                 },
                 {
                     "path": "app/core/security.py",
                     "template": "auth/auth_security.py"
+                },
+                {
+                    "path": "app/domains/auth/services.py",
+                    "template": "auth/auth_services.py"
                 }
             ],
             config={

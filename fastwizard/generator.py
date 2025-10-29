@@ -79,14 +79,9 @@ class ProjectGenerator:
         # Répertoires principaux
         directories = [
             "app",
-            "app/api",
-            "app/api/v1",
             "app/core",
-            "app/models",
-            "app/schemas",
-            "app/routers",
-            "app/auth",
             "app/middleware",
+            "app/domains",
             "tests"
         ]
         
@@ -96,13 +91,8 @@ class ProjectGenerator:
         # Fichiers __init__.py
         init_files = [
             "app/__init__.py",
-            "app/api/__init__.py",
-            "app/api/v1/__init__.py",
             "app/core/__init__.py",
-            "app/models/__init__.py",
-            "app/schemas/__init__.py",
-            "app/routers/__init__.py",
-            "app/auth/__init__.py",
+            "app/domains/__init__.py",
             "app/middleware/__init__.py",
             "tests/__init__.py"
         ]
@@ -249,7 +239,7 @@ app.add_middleware(
         
         
         if "auth-jwt" in selected_modules:
-            imports.append("from app.api.v1.auth import router as auth_router")
+            imports.append("from app.domains.auth.router import router as auth_router")
             router_includes.append("app.include_router(auth_router, prefix='/api/v1/auth', tags=['auth'])")
         
         # Choix du comportement startup: privilégier Alembic si DB présente
@@ -392,12 +382,12 @@ async def get_user(user_id: int):
 ## 🧭 Guide de la structure
 
 - `main.py` : Point d'entrée FastAPI. Initialise l'app, CORS (si activé), routes, et lifecycle.
-- `app/api/v1/` : Endpoints versionnés (v1). Ajoutez vos routeurs ici.
 - `app/core/` : Configuration transversale (sécurité, CORS, permissions, etc.).
-- `app/models/` : Modèles SQLAlchemy.
-- `app/schemas/` : Schémas Pydantic pour entrées/sorties.
-- `app/auth/` : Authentification et sécurité (JWT, dépendances, routes).
-- `app/routers/` : Routeurs métiers additionnels.
+- `app/domains/` : Dossiers par domaine métier (auth, users, ...). Chaque domaine peut contenir :
+  - `model.py` (modèles SQLAlchemy)
+  - `schemas.py` (schémas Pydantic)
+  - `router.py` (routes FastAPI du domaine)
+  - `dependencies.py` (dépendances spécifiques au domaine)
 - `app/middleware/` : Middlewares custom.
 - `tests/` : Tests unitaires et d'intégration.
 - `alembic/` & `alembic.ini` : Migrations DB (si DB activée).
@@ -418,7 +408,7 @@ CORS est activé via `app/core/cors.py`. Modifiez origines/méthodes/headers dan
         # Ajouter un rappel migrations dans démarrage rapide si DB active
         migrations_hint = ''
         if any(m.startswith('db-') for m in selected_modules):
-            migrations_hint = '\n# Appliquer les migrations (nécessite Alembic configuré)\n# Une migration initiale est créée automatiquement dans alembic/versions/\nalembic upgrade head\n'
+            migrations_hint = '\n# Appliquer les migrations (nécessite Alembic configuré)\n# Une migration initiale est créée automatiquement dans alembic/versions/\ndocker compose exec app alembic upgrade head\n'
 
         return f'''# {project_name}
 

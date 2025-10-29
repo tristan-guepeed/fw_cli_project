@@ -4,8 +4,8 @@ def get_template(config):
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.auth.jwt_handler import verify_token
-from app.models.user import User
+from app.domains.auth.jwt_handler import verify_token
+from app.domains.auth.model import User
 from app.database import get_db
 
 # Schéma de sécurité HTTP Bearer

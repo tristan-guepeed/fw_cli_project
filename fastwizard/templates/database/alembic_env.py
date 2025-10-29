@@ -31,7 +31,7 @@ if config.config_file_name is not None:
 sys.path.append(str(Path(__file__).parent.parent))
 
 from app.database import Base
-from app.models.user import User  # Import des modèles
+from app.domains.auth.model import User  # Import des modèles
 
 target_metadata = Base.metadata
 

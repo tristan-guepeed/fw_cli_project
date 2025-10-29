@@ -4,8 +4,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi import Path
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_active_user
-from app.models.user import User
+from app.domains.auth.dependencies import get_current_active_user
+from app.domains.auth.model import User
 from app.database import get_db
 
 
