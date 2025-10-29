@@ -26,13 +26,6 @@ PASSWORD_REQUIRE_LOWERCASE = True
 PASSWORD_REQUIRE_NUMBERS = True
 PASSWORD_REQUIRE_SPECIAL_CHARS = False
 
-# Configuration CORS pour l'authentification
-CORS_ORIGINS = [
-    "http://localhost:3000",  # React dev server
-    "http://localhost:8080",  # Vue dev server
-    "http://localhost:4200",  # Angular dev server
-]
-
 # Configuration des cookies sécurisés
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "False").lower() == "true"
 COOKIE_HTTP_ONLY = True

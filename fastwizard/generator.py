@@ -33,10 +33,11 @@ class ProjectGenerator:
         # Validation des modules
         warnings = self.module_manager.validate_module_combinations(selected_modules)
         if warnings:
-            console.print("⚠️  [yellow]Avertissements :[/yellow]")
+            console.print("\n[bold red]❌ Erreurs de configuration des modules :[/bold red]")
             for warning in warnings:
-                console.print(f"   • {warning}")
+                console.print(f"   [red]• {warning}[/red]")
             console.print()
+            raise ValueError("La génération du projet a été annulée en raison des erreurs ci-dessus.")
         
         # Création du répertoire du projet
         project_path = Path(project_name)
@@ -164,14 +165,15 @@ class ProjectGenerator:
         # Ajouter les imports et configurations selon les modules
         if "cors" in selected_modules:
             imports.append("from fastapi.middleware.cors import CORSMiddleware")
+            imports.append("from app.core.cors import CORS_ORIGINS, CORS_ALLOW_CREDENTIALS, CORS_ALLOW_METHODS, CORS_ALLOW_HEADERS")
             middleware_setup.append("""
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=CORS_ALLOW_CREDENTIALS,
+    allow_methods=CORS_ALLOW_METHODS,
+    allow_headers=CORS_ALLOW_HEADERS,
 )""")
         
         
@@ -276,7 +278,65 @@ if __name__ == "__main__":
         """Génère le README.md"""
         
         modules_list = "\n".join([f"- {module}" for module in selected_modules]) if selected_modules else "- Aucun module spécial"
-        
+        permissions_section = ''
+        if "auth-permissions" in selected_modules:
+            permissions_section = '''
+
+## 🔒 Rôles et permissions
+
+Ce projet inclut un système simple de rôles et permissions via `app/core/permissions.py` :
+
+- `require_admin` : restreint l'accès aux administrateurs.
+- `require_self_or_admin_by_param` : autorise l'accès si l'utilisateur courant correspond au `user_id` de la route ou est admin.
+- `require_self_or_admin_by_owner(owner_id)` : à utiliser après avoir chargé une ressource pour vérifier propriétaire/admin.
+
+Exemples d'utilisation dans une route FastAPI :
+
+```python
+from fastapi import APIRouter, Depends
+from app.core.permissions import require_admin, require_self_or_admin_by_param
+
+router = APIRouter()
+
+@router.get("/admin-only", dependencies=[Depends(require_admin)])
+async def admin_only():
+    return {"ok": True}
+
+@router.get("/users/{user_id}", dependencies=[Depends(require_self_or_admin_by_param)])
+async def get_user(user_id: int):
+    return {"user_id": user_id}
+```
+'''
+
+        # Sections explicatives détaillées
+        structure_details = '''
+
+## 🧭 Guide de la structure
+
+- `main.py` : Point d'entrée FastAPI. Initialise l'app, CORS (si activé), routes, et lifecycle.
+- `app/api/v1/` : Endpoints versionnés (v1). Ajoutez vos routeurs ici.
+- `app/core/` : Configuration transversale (sécurité, CORS, permissions, etc.).
+- `app/models/` : Modèles SQLAlchemy.
+- `app/schemas/` : Schémas Pydantic pour entrées/sorties.
+- `app/auth/` : Authentification et sécurité (JWT, dépendances, routes).
+- `app/routers/` : Routeurs métiers additionnels.
+- `app/middleware/` : Middlewares custom.
+- `tests/` : Tests unitaires et d'intégration.
+- `alembic/` & `alembic.ini` : Migrations DB (si DB activée).
+- `Dockerfile` & `docker-compose.yml` : Conteneurisation (si Docker activé).
+
+'''
+
+        cors_section = ''
+        if "cors" in selected_modules:
+            cors_section = '''
+
+## 🌐 CORS
+
+CORS est activé via `app/core/cors.py`. Modifiez origines/méthodes/headers dans ce fichier.
+
+'''
+
         return f'''# {project_name}
 
 Projet FastAPI généré avec [FastWizard](https://github.com/your-repo/fastwizard) 🧙‍♂️
@@ -384,6 +444,10 @@ curl -X GET "http://localhost:8000/api/v1/auth/me" \\
 ├── requirements.txt     # Dépendances
 └── README.md           # Ce fichier
 ```
+
+{permissions_section}
+{cors_section}
+{structure_details}
 
 ## 🛠️ Développement
 

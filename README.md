@@ -5,7 +5,7 @@
 ## ✨ Fonctionnalités principales
 
 - **🚀 CLI interactive** : Interface utilisateur intuitive avec Rich
-- **🔧 Modules réutilisables** : CRUD, Auth, DB, Docker, Tests, etc.
+- **🔧 Modules réutilisables** : rôles & permissions, Auth, DB, Docker etc.
 - **📦 Générateur complet** : Structure FastAPI standard + modules choisis
 - **🎨 Expérience utilisateur** : Messages clairs, confirmations, progress bars
 
@@ -23,6 +23,9 @@ python -m venv venv
 source venv/bin/activate  # Linux/Mac
 # ou
 venv\Scripts\activate     # Windows
+
+# Installer les dépendances nécessaires
+pip install -r requirements.txt
 
 # Installer en mode développement
 pip install -e .
@@ -57,17 +60,11 @@ fastwizard version
 
 ## 🔧 Modules disponibles
 
-### Base de données
-- **`db-postgresql`** : Configuration PostgreSQL avec SQLAlchemy et Alembic
-
-### Authentification
-- **JWT** : Configuration token et routes d'authentification avec JWT
-
-### Fonctionnalités
-- **A venir**
-
-### Développement
-- **`docker`** : Dockerfile et docker-compose.yml
+- **`db-postgresql`**: PostgreSQL + SQLAlchemy + Alembic, avec helpers (`get_db`, `create_tables`).
+- **`auth-jwt`**: Dépend de `db-postgresql`. Système d'auth (register, login, refresh, me, change-password) + modèles/schémas.
+- **`auth-permissions`**: Dépend de `auth-jwt`. Dépendances prêtes: `require_admin`, `require_self_or_admin_by_param`, `require_self_or_admin_by_owner`.
+- **`cors`**: CORS configurable via `app/core/cors.py` (origines, méthodes, headers, credentials) et appliqué dans `main.py`.
+- **`docker`**: `Dockerfile`, `docker-compose.yml`, `.dockerignore` (avec Postgres + Adminer en option).
 
 ## 📁 Structure générée
 
@@ -75,12 +72,12 @@ fastwizard version
 mon-projet-fastapi/
 ├── app/
 │   ├── api/v1/          # Routes API
+│   ├── auth/            # Authentification 
 │   ├── core/            # Configuration de base
+│   ├── middleware       #
 │   ├── models/          # Modèles de données
-│   ├── schemas/         # Schémas Pydantic
 │   ├── routers/         # Routeurs FastAPI
-│   ├── auth/            # Authentification
-│   └── middleware/      # Middleware personnalisés
+│   ├── schemas/         # Schémas Pydantic
 ├── tests/               # Tests unitaires
 ├── main.py              # Point d'entrée
 ├── requirements.txt     # Dépendances
@@ -106,21 +103,21 @@ fastwizard/
     └── ...
 ```
 
+### Comprendre chaque fichier/partie
+
+- `fastwizard/cli.py` : CLI Typer (`fastwizard new`, `fastwizard modules`, `fastwizard version`).
+- `fastwizard/modules.py` : Catalogue des modules (ID, fichiers à générer, dépendances, validations).
+- `fastwizard/generator.py` : Orchestration de la génération (structure, fichiers principaux, modules, README).
+- `fastwizard/templates/*` : Templates Python qui retournent du code via `get_template(config)`.
+- `setup.py` : Point d’entrée `console_scripts` pour la commande `fastwizard`.
+- `requirements.txt` : Dépendances pour développer/installer la CLI.
+
 ### Ajouter un nouveau module
 
 1. **Définir le module** dans `modules.py`
 2. **Créer le template** dans `templates/`
 3. **Tester** avec `fastwizard new`
 
-## 🧪 Tests
-
-```bash
-# Lancer les tests
-python test_generation.py
-
-# Test complet avec tous les modules
-python test_full_generation.py
-```
 
 ## 📝 Exemple d'utilisation
 

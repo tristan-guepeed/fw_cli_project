@@ -92,6 +92,41 @@ class ModuleManager:
             }
         )
         
+        # Module Permissions simples (roles user/admin + self-or-admin)
+        modules["auth-permissions"] = ModuleInfo(
+            id="auth-permissions",
+            name="Permissions (rôles simples)",
+            description="Dépend de auth-jwt. Fournit des dépendances de permissions: admin requis et self-or-admin.",
+            dependencies=[],
+            files=[
+                {
+                    "path": "app/core/permissions.py",
+                    "template": "auth/auth_permissions.py"
+                }
+            ],
+            config={}
+        )
+        
+        # Module CORS
+        modules["cors"] = ModuleInfo(
+            id="cors",
+            name="CORS",
+            description="Active et configure CORS pour l'API (origines, headers, méthodes).",
+            dependencies=["fastapi"],
+            files=[
+                {
+                    "path": "app/core/cors.py",
+                    "template": "core/cors.py"
+                }
+            ],
+            config={
+                "origins": ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080", "http://localhost:4200"],
+                "allow_credentials": True,
+                "allow_methods": ["*"],
+                "allow_headers": ["*"],
+            }
+        )
+        
         # Module Docker
         modules["docker"] = ModuleInfo(
             id="docker",
@@ -162,6 +197,9 @@ class ModuleManager:
         #    warnings.append("Le module CRUD nécessite un module de base de données")
         
         if "auth-jwt" in module_ids and not any(mid.startswith("db-") for mid in module_ids):
-            warnings.append("Le module auth-jwt nécessite un module de base de données")
+            warnings.append("LE MODULE AUTH-JWT NECESSITE UN MODULE DE BASE DE DONNEES")
         
+        if "auth-permissions" in module_ids and "auth-jwt" not in module_ids:
+            warnings.append("LE MODULE AUTH-PERMISSIONS NECESSITE LE MODULE AUTH-JWT")
+
         return warnings
