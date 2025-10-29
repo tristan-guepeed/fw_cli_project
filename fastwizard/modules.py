@@ -158,8 +158,8 @@ class ModuleManager:
             warnings.append(f"Conflit détecté : plusieurs modules de base de données sélectionnés ({', '.join(db_modules)})")
         
         # Vérifier les dépendances manquantes
-        if "crud" in module_ids and not any(mid.startswith("db-") for mid in module_ids):
-            warnings.append("Le module CRUD nécessite un module de base de données")
+        #if "crud" in module_ids and not any(mid.startswith("db-") for mid in module_ids):
+        #    warnings.append("Le module CRUD nécessite un module de base de données")
         
         if "auth-jwt" in module_ids and not any(mid.startswith("db-") for mid in module_ids):
             warnings.append("Le module auth-jwt nécessite un module de base de données")

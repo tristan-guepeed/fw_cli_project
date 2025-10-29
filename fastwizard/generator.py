@@ -174,19 +174,10 @@ app.add_middleware(
     allow_headers=["*"],
 )""")
         
-        if "logging" in selected_modules:
-            imports.append("from app.core.logging import setup_logging")
-            middleware_setup.append("""
-# Logging
-setup_logging()""")
         
         if "auth-jwt" in selected_modules:
             imports.append("from app.api.v1.auth import router as auth_router")
             router_includes.append("app.include_router(auth_router, prefix='/api/v1/auth', tags=['auth'])")
-        
-        if "file-upload" in selected_modules:
-            imports.append("from app.routers.files import router as files_router")
-            router_includes.append("app.include_router(files_router, prefix='/api/v1/files', tags=['files'])")
         
         return f'''from contextlib import asynccontextmanager
 {chr(10).join(imports)}
