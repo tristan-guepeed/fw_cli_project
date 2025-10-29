@@ -147,6 +147,10 @@ class ProjectGenerator:
                 # Dans une version complète, on utiliserait des templates
                 template_content = self._get_template_content(file_info["template"], module.config)
                 file_path.write_text(template_content)
+
+            # Si base de données PostgreSQL sélectionnée, créer une migration initiale Alembic
+            if module_id == "db-postgresql":
+                self._ensure_initial_migration(project_path, include_user=("auth-jwt" in selected_modules))
     
     def _finalize_project(self, project_path: Path, project_name: str, selected_modules: List[str]):
         """Finalise la configuration du projet"""
@@ -154,6 +158,73 @@ class ProjectGenerator:
         # Configuration des modules dans main.py si nécessaire
         if selected_modules:
             self._update_main_with_modules(project_path, selected_modules)
+
+    def _ensure_initial_migration(self, project_path: Path, include_user: bool) -> None:
+        """Crée une migration initiale Alembic si inexistante.
+        - include_user: si True, crée la table users (module auth-jwt présent)
+        """
+        versions_dir = project_path / "alembic" / "versions"
+        versions_dir.mkdir(parents=True, exist_ok=True)
+
+        existing = list(versions_dir.glob("*_init.py"))
+        if existing:
+            return
+
+        # Identifiant simple; dans un vrai projet on utiliserait datetime+hash
+        revision_id = "0001"
+        filename = versions_dir / f"{revision_id}_init.py"
+
+        if include_user:
+            migration_content = f'''"""initial schema"""
+from alembic import op
+import sqlalchemy as sa
+
+# revision identifiers, used by Alembic.
+revision = "{revision_id}"
+down_revision = None
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    op.create_table(
+        "users",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("username", sa.String(length=50), nullable=False, unique=True, index=True),
+        sa.Column("email", sa.String(length=100), nullable=False, unique=True, index=True),
+        sa.Column("hashed_password", sa.String(length=255), nullable=False),
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text('true')),
+        sa.Column("is_admin", sa.Boolean(), nullable=False, server_default=sa.text('false')),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text('NOW()')),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
+    )
+
+
+def downgrade() -> None:
+    op.drop_table("users")
+'''
+        else:
+            migration_content = f'''"""initial schema (empty)"""
+from alembic import op
+import sqlalchemy as sa
+
+# revision identifiers, used by Alembic.
+revision = "{revision_id}"
+down_revision = None
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    # Add your tables here or run autogenerate later
+    pass
+
+
+def downgrade() -> None:
+    pass
+'''
+
+        filename.write_text(migration_content)
     
     def _get_main_template(self, project_name: str, selected_modules: List[str]) -> str:
         """Template pour main.py"""
@@ -181,15 +252,22 @@ app.add_middleware(
             imports.append("from app.api.v1.auth import router as auth_router")
             router_includes.append("app.include_router(auth_router, prefix='/api/v1/auth', tags=['auth'])")
         
+        # Choix du comportement startup: privilégier Alembic si DB présente
+        startup_lines = ["# Startup"]
+        if any(m.startswith("db-") for m in selected_modules):
+            startup_lines.append("print(\"ℹ️ Démarrage: utilisez Alembic pour gérer les migrations (docker compose exec app alembic upgrade head).\")")
+        else:
+            startup_lines.append("print(\"ℹ️ Démarrage de l'application\")")
+        # Indenter proprement toutes les lignes du bloc startup
+        indent = "    "
+        startup_block = "\n".join([indent + line for line in startup_lines])
+
         return f'''from contextlib import asynccontextmanager
 {chr(10).join(imports)}
 
 @asynccontextmanager
 async def lifespan(app):
-    # Startup
-    from app.database import create_tables
-    create_tables()
-    print("✅ Tables de base de données créées/vérifiées")
+{startup_block}
     yield
     # Shutdown (si nécessaire)
 
@@ -337,6 +415,11 @@ CORS est activé via `app/core/cors.py`. Modifiez origines/méthodes/headers dan
 
 '''
 
+        # Ajouter un rappel migrations dans démarrage rapide si DB active
+        migrations_hint = ''
+        if any(m.startswith('db-') for m in selected_modules):
+            migrations_hint = '\n# Appliquer les migrations (nécessite Alembic configuré)\n# Une migration initiale est créée automatiquement dans alembic/versions/\nalembic upgrade head\n'
+
         return f'''# {project_name}
 
 Projet FastAPI généré avec [FastWizard](https://github.com/your-repo/fastwizard) 🧙‍♂️
@@ -362,6 +445,7 @@ uvicorn main:app --reload
 
 # Avec Docker
 docker compose up --build
+{migrations_hint}
 ```
 
 L'API sera disponible sur [http://localhost:8000](http://localhost:8000)
@@ -451,24 +535,14 @@ curl -X GET "http://localhost:8000/api/v1/auth/me" \\
 
 ## 🛠️ Développement
 
-### Tests
-
-```bash
-# Lancer les tests
-pytest
-
-# Avec couverture
-pytest --cov=app
-```
-
 ### Base de données
 
 ```bash
 # Migrations (si Alembic est configuré)
-alembic upgrade head
+docker compose exec app alembic upgrade head
 
 # Créer une nouvelle migration
-alembic revision --autogenerate -m "Description"
+docker compose exec app alembic revision --autogenerate -m "Description"
 ```
 
 ### Visualisation de la base de données
