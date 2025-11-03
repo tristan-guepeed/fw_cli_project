@@ -61,6 +61,7 @@ fastwizard version
 ## 🔧 Modules disponibles
 
 - **`db-postgresql`**: PostgreSQL + SQLAlchemy + Alembic, avec helpers (`get_db`, `create_tables`).
+- **`db-mysql`**: MySQL + SQLAlchemy + Alembic, avec helpers (`get_db`, `create_tables`).
 - **`auth-jwt`**: Dépend de `db-postgresql`. Système d'auth (register, login, refresh, me, change-password) + modèles/schémas.
 - **`auth-permissions`**: Dépend de `auth-jwt`. Dépendances prêtes: `require_admin`, `require_self_or_admin_by_param`, `require_self_or_admin_by_owner`.
 - **`cors`**: CORS configurable via `app/core/cors.py` (origines, méthodes, headers, credentials) et appliqué dans `main.py`.
