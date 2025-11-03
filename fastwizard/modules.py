@@ -110,6 +110,10 @@ class ModuleManager:
                     "template": "auth/auth_security.py"
                 },
                 {
+                    "path": "app/core/config.py",
+                    "template": "core/config.py"
+                },
+                {
                     "path": "app/domains/auth/services.py",
                     "template": "auth/auth_services.py"
                 }

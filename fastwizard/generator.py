@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from shutil import copyfile
 
 from .modules import ModuleManager
 
@@ -113,7 +114,7 @@ class ProjectGenerator:
         # .env.example
         env_content = self._generate_env_example(selected_modules, db_config)
         (project_path / ".env.example").write_text(env_content)
-        
+
         # README.md
         readme_content = self._generate_readme(project_name, selected_modules)
         (project_path / "README.md").write_text(readme_content)
@@ -217,42 +218,43 @@ def downgrade() -> None:
         filename.write_text(migration_content)
     
     def _get_main_template(self, project_name: str, selected_modules: List[str]) -> str:
-        """Template pour main.py"""
-        
-        imports = ["from fastapi import FastAPI"]
-        middleware_setup = []
+        """Template pour main.py compatible config centralisée"""
+    
+        imports = [
+            "from fastapi import FastAPI",
+            "from contextlib import asynccontextmanager",
+        ]
         router_includes = []
-        
-        # Ajouter les imports et configurations selon les modules
+        middleware_setup = []
+    
         if "cors" in selected_modules:
-            imports.append("from fastapi.middleware.cors import CORSMiddleware")
-            imports.append("from app.core.cors import CORS_ORIGINS, CORS_ALLOW_CREDENTIALS, CORS_ALLOW_METHODS, CORS_ALLOW_HEADERS")
-            middleware_setup.append("""
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
-    allow_credentials=CORS_ALLOW_CREDENTIALS,
-    allow_methods=CORS_ALLOW_METHODS,
-    allow_headers=CORS_ALLOW_HEADERS,
-)""")
-        
-        
+            imports.append("from app.core.cors import setup_cors")
+    
         if "auth-jwt" in selected_modules:
             imports.append("from app.domains.auth.router import router as auth_router")
             router_includes.append("app.include_router(auth_router, prefix='/api/v1/auth', tags=['auth'])")
-        
-        # Choix du comportement startup: privilégier Alembic si DB présente
+    
+        if "config" in selected_modules or "cors" in selected_modules:
+            imports.append("from app.core.config import get_settings")
+
+    
+        # Startup block
         startup_lines = ["# Startup"]
         if any(m.startswith("db-") for m in selected_modules):
-            startup_lines.append("print(\"ℹ️ Démarrage: utilisez Alembic pour gérer les migrations (docker compose exec app alembic upgrade head).\")")
+            startup_lines.append(
+                "print(\"ℹ️ Démarrage: utilisez Alembic pour gérer les migrations (docker compose exec app alembic upgrade head).\")"
+            )
         else:
             startup_lines.append("print(\"ℹ️ Démarrage de l'application\")")
-        # Indenter proprement toutes les lignes du bloc startup
         indent = "    "
         startup_block = "\n".join([indent + line for line in startup_lines])
-
-        return f'''from contextlib import asynccontextmanager
+    
+        # Middleware CORS
+        if "cors" in selected_modules:
+            middleware_setup.append("settings = get_settings()")
+            middleware_setup.append("setup_cors(app)")
+    
+        return f'''{chr(10).join(imports)}
 {chr(10).join(imports)}
 
 @asynccontextmanager
@@ -293,7 +295,8 @@ if __name__ == "__main__":
         base_requirements = [
             "fastapi>=0.104.0",
             "uvicorn[standard]>=0.24.0",
-            "python-dotenv>=1.0.0"
+            "python-dotenv>=1.0.0",
+            "pydantic-settings>=2.11.0",
         ]
         
         # Ajouter les dépendances des modules
@@ -306,42 +309,84 @@ if __name__ == "__main__":
         return "\n".join(unique_requirements)
     
     def _generate_env_example(self, selected_modules: List[str], db_config: dict = None) -> str:
-        """Génère le fichier .env.example"""
-        
+        """Génère un fichier .env.example complet et cohérent avec config.py"""
+
         env_vars = [
-            "# Configuration de base",
+            "# ===============================",
+            "# 🌐 Configuration de base",
+            "# ===============================",
             "APP_NAME=Mon Projet FastAPI",
             "DEBUG=True",
-            "SECRET_KEY=your-secret-key-here-change-this-in-production",
-            ""
+            "ENVIRONMENT=development",
+            "",
         ]
-        
-        # Ajouter les variables JWT si le module auth est sélectionné
+
+        # --- Auth / JWT ---
         if "auth-jwt" in selected_modules:
             env_vars.extend([
-                "# Configuration JWT",
+                "# ===============================",
+                "# 🔐 Configuration JWT",
+                "# ===============================",
                 "SECRET_KEY=your-super-secret-jwt-key-change-this-in-production",
                 "ALGORITHM=HS256",
                 "ACCESS_TOKEN_EXPIRE_MINUTES=30",
                 "REFRESH_TOKEN_EXPIRE_DAYS=7",
-                ""
+                "",
             ])
-        
-        # Ajouter les variables selon les modules
-        if any(module.startswith("db-") for module in selected_modules) and db_config:
+
+        # --- Sécurité / Cookies ---
+        if "auth-jwt" in selected_modules or "auth-permissions" in selected_modules:
             env_vars.extend([
-                "# Base de données",
-                f"DATABASE_URL={db_config.get('database_url', 'sqlite:///./app.db')}",
-                f"DB_HOST={db_config.get('host', 'localhost')}",
-                f"DB_PORT={db_config.get('port', '5432')}",
-                f"DB_NAME={db_config.get('database_name', 'fastapi_db')}",
-                f"DB_USER={db_config.get('username', 'fastapi_user')}",
-                f"DB_PASSWORD={db_config.get('password', 'fastapi_password')}",
-                ""
+                "# ===============================",
+                "# 🍪 Cookies & sécurité",
+                "# ===============================",
+                "COOKIE_SECURE=False",
+                "COOKIE_HTTP_ONLY=True",
+                "COOKIE_SAME_SITE=lax",
+                "",
             ])
-        
+
+        # --- Base de données ---
+        if any(module.startswith("db-") for module in selected_modules):
+            driver = "postgresql" if "db-postgresql" in selected_modules else "mysql"
+            env_vars.extend([
+                "# ===============================",
+                "# 🗄️ Base de données",
+                "# ===============================",
+                f"DATABASE_URL={db_config.get('database_url', f'{driver}://user:password@localhost:5432/fastapi_db') if db_config else f'{driver}://user:password@localhost:5432/fastapi_db'}",
+                f"DB_HOST={db_config.get('host', 'localhost') if db_config else 'localhost'}",
+                f"DB_PORT={db_config.get('port', '5432' if driver == 'postgresql' else '3306') if db_config else ('5432' if driver == 'postgresql' else '3306')}",
+                f"DB_NAME={db_config.get('database_name', 'fastapi_db') if db_config else 'fastapi_db'}",
+                f"DB_USER={db_config.get('username', 'fastapi_user') if db_config else 'fastapi_user'}",
+                f"DB_PASSWORD={db_config.get('password', 'fastapi_password') if db_config else 'fastapi_password'}",
+                "",
+            ])
+
+        # --- CORS ---
+        if "cors" in selected_modules:
+            env_vars.extend([
+                "# ===============================",
+                "# 🌍 Configuration CORS",
+                "# ===============================",
+                'CORS_ORIGINS=["http://localhost:3000","http://localhost:5173","http://localhost:8080","http://localhost:4200"]',
+                "CORS_ALLOW_CREDENTIALS=True",
+                'CORS_ALLOW_METHODS=["*"]',
+                'CORS_ALLOW_HEADERS=["*"]',
+                "",
+            ])
+
+        # --- Docker ---
+        if "docker" in selected_modules:
+            env_vars.extend([
+                "# ===============================",
+                "# 🐳 Docker",
+                "# ===============================",
+                "DOCKER_ENV=production",
+                "",
+            ])
+
         return "\n".join(env_vars)
-    
+
     def _generate_readme(self, project_name: str, selected_modules: List[str]) -> str:
         """Génère le README.md"""
         
