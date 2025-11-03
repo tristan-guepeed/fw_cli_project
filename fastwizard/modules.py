@@ -44,6 +44,10 @@ class ModuleManager:
                 {
                     "path": "alembic/env.py",
                     "template": "database/alembic_env.py"
+                },
+                {
+                    "path": "alembic/script.py.mako",
+                    "template": "database/alembic_script_mako.py"
                 }
             ],
             config={
@@ -70,6 +74,10 @@ class ModuleManager:
                 {
                     "path": "alembic/env.py",
                     "template": "database/alembic_env.py"
+                },
+                {
+                    "path": "alembic/script.py.mako",
+                    "template": "database/alembic_script_mako.py"
                 }
             ],
             config={
@@ -186,6 +194,20 @@ class ModuleManager:
                 "port": 8000,
                 "reload": True
             }
+        )
+
+        modules["crud"] = ModuleInfo(
+            id="crud",
+            name="Générateur CRUD",
+            description="Génération de routes CRUD basiques pour les modèles SQLAlchemy",
+            dependencies=[],
+            files=[
+                {"template": "crud/crud_utils.py"},
+                {"template": "crud/model_template.py"},
+                {"template": "crud/schemas_template.py"},
+                {"template": "crud/services_template.py"},
+            ],
+            config={}
         )
         
         return modules

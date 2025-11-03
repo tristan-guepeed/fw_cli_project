@@ -77,6 +77,68 @@ def new():
     except Exception as e:
         console.print(f"❌ [red]Erreur lors de la génération :[/red] {str(e)}")
         raise typer.Exit(1)
+    
+def prompt_crud_modules():
+    """
+    Prompt interactif pour générer un ou plusieurs modules CRUD
+    Retourne un dictionnaire { app_name: fields }
+    """
+    crud_modules = {}
+
+    while True:
+        console.print("📦 [bold]Configuration d'un module CRUD[/bold]")
+
+        # Nom de l'app
+        app_name = Prompt.ask("Nom de l'app (ex: food)").strip()
+
+        # Nombre de champs
+        n_fields = int(Prompt.ask("Combien de champs ?", default="1"))
+
+        # Types autorisés
+        type_options = ["str", "int", "float", "bool", "datetime"]
+        fields = {}
+
+        for i in range(1, n_fields + 1):
+            field_name = Prompt.ask(f"Nom du champ {i}").strip()
+            while True:
+                field_type = Prompt.ask(f"Type du champ {i} ({', '.join(type_options)})").strip()
+                if field_type in type_options:
+                    break
+                console.print(f"⚠️ Type invalide. Choisissez parmi: {', '.join(type_options)}")
+            fields[field_name] = field_type
+
+        # Ajouter au dict
+        crud_modules[app_name] = fields
+        console.print(f"✅ Module CRUD [bold]{app_name}[/bold] configuré avec {len(fields)} champs\n")
+
+        # Demander si l'utilisateur veut en ajouter un autre
+        add_another = Confirm.ask("Voulez-vous créer un autre module CRUD ?", default=False)
+        if not add_another:
+            break
+
+    return crud_modules
+
+
+def prompt_module_fields():
+    app_name = Prompt.ask("Nom de l'app (ex: food)").lower()
+    ModelName = Prompt.ask("Nom du modèle (ex: Food)").capitalize()
+
+    fields = {}
+    while True:
+        field_name = Prompt.ask("Nom du champ (laisser vide pour terminer)", default="").strip()
+        if not field_name:
+            break
+        field_type = Prompt.ask(
+            f"Type de '{field_name}'",
+            choices=["str", "int", "float", "bool", "datetime"],
+            default="str"
+        )
+        fields[field_name] = field_type
+        console.print(f"Champ ajouté : {field_name} ({field_type})")
+
+    return app_name, fields, ModelName
+
+
 
 def select_modules() -> List[str]:
     """
@@ -108,6 +170,21 @@ def select_modules() -> List[str]:
         if Confirm.ask(f"Inclure le module [bold cyan]{module_id}[/bold cyan] ?", default=False):
             selected.append(module_id)
             console.print(f"✅ [green]{module_id}[/green] ajouté")
+
+            # Cas spécial pour CRUD
+            if module_id == "crud":
+                while True:
+                    app_name, fields, ModelName = prompt_module_fields()
+                    ProjectGenerator.CRUD_ENTITIES[app_name] = {
+                        "fields": fields,
+                        "ModelName": ModelName,
+                        "model_name": app_name.lower(),
+                        "app_name": app_name
+                    }
+                    console.print(f"✅ Module CRUD '{app_name}' configuré\n")
+
+                    if not Confirm.ask("Voulez-vous créer un autre module CRUD ?", default=False):
+                        break
         else:
             console.print(f"⏭️  [dim]{module_id}[/dim] ignoré")
         console.print()

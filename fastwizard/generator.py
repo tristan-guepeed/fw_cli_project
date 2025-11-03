@@ -21,7 +21,7 @@ class ProjectGenerator:
         self.templates_dir = Path(__file__).parent / "templates"
     
     # Variables globales pour stocker les configurations
-    CRUD_ENTITIES = []
+    CRUD_ENTITIES = {}
     DB_CONFIG = {}
     
     def generate_project(self, project_name: str, selected_modules: List[str]):
@@ -128,20 +128,42 @@ class ProjectGenerator:
         
         for module_id in selected_modules:
             module = self.module_manager.get_module(module_id)
-            
-            for file_info in module.files:
-                file_path = project_path / file_info["path"]
-                file_path.parent.mkdir(parents=True, exist_ok=True)
-                
-                # Pour l'instant, on crée des fichiers de base
-                # Dans une version complète, on utiliserait des templates
-                config = {**module.config, "selected_modules": selected_modules}
-                template_content = self._get_template_content(file_info["template"], config)   
-                file_path.write_text(template_content)
 
-            # Si base de données PostgreSQL sélectionnée, créer une migration initiale Alembic
-            if module_id == "db-postgresql" or module_id == "db-mysql":
-                self._ensure_initial_migration(project_path, include_user=("auth-jwt" in selected_modules))
+            if module_id == "crud":
+                for app_name, config in ProjectGenerator.CRUD_ENTITIES.items():
+                    module_dir = project_path / "app" / "domains" / app_name
+                    module_dir.mkdir(parents=True, exist_ok=True)
+                
+                    for file_info in module.files:
+                        template_content = self._get_template_content(file_info["template"], {
+                            "app_name": app_name,
+                            "ModelName": config["ModelName"],
+                            "model_name": config["model_name"],
+                            "fields": config["fields"],  # <-- ici on passe seulement fields
+                            "selected_modules": selected_modules,
+                        })
+                
+                        dest_file_name = file_info["template"].split("/")[-1].replace("_template", "")
+                        if dest_file_name == "crud_utils.py":
+                            dest_file_name = "router.py"
+                
+                        file_path = module_dir / dest_file_name
+                        file_path.write_text(template_content)
+
+            else:
+                for file_info in module.files:
+                    file_path = project_path / file_info["path"]
+                    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    # Pour l'instant, on crée des fichiers de base
+                    # Dans une version complète, on utiliserait des templates
+                    config = {**module.config, "selected_modules": selected_modules}
+                    template_content = self._get_template_content(file_info["template"], config)   
+                    file_path.write_text(template_content)
+
+                # Si base de données PostgreSQL sélectionnée, créer une migration initiale Alembic
+                if module_id == "db-postgresql" or module_id == "db-mysql":
+                    self._ensure_initial_migration(project_path, include_user=("auth-jwt" in selected_modules))
     
     def _finalize_project(self, project_path: Path, project_name: str, selected_modules: List[str]):
         """Finalise la configuration du projet"""
@@ -218,26 +240,29 @@ def downgrade() -> None:
         filename.write_text(migration_content)
     
     def _get_main_template(self, project_name: str, selected_modules: List[str]) -> str:
-        """Template pour main.py compatible config centralisée"""
-    
+        """Template pour main.py compatible config centralisée et inclusion dynamique des routers"""
+
         imports = [
             "from fastapi import FastAPI",
             "from contextlib import asynccontextmanager",
         ]
         router_includes = []
         middleware_setup = []
-    
+
         if "cors" in selected_modules:
             imports.append("from app.core.cors import setup_cors")
-    
+
         if "auth-jwt" in selected_modules:
             imports.append("from app.domains.auth.router import router as auth_router")
             router_includes.append("app.include_router(auth_router, prefix='/api/v1/auth', tags=['auth'])")
-    
+
         if "config" in selected_modules or "cors" in selected_modules:
             imports.append("from app.core.config import get_settings")
 
-    
+        # Ajouter import pour inclusion dynamique
+        imports.append("import importlib")
+        imports.append("from pathlib import Path")
+
         # Startup block
         startup_lines = ["# Startup"]
         if any(m.startswith("db-") for m in selected_modules):
@@ -248,18 +273,33 @@ def downgrade() -> None:
             startup_lines.append("print(\"ℹ️ Démarrage de l'application\")")
         indent = "    "
         startup_block = "\n".join([indent + line for line in startup_lines])
-    
+
         # Middleware CORS
         if "cors" in selected_modules:
             middleware_setup.append("settings = get_settings()")
             middleware_setup.append("setup_cors(app)")
-    
+
+        # Inclusion dynamique des routers CRUD
+        dynamic_router_code = '''
+# Inclusion dynamique de tous les routers CRUD dans app/domains
+domains_path = Path(__file__).parent / "app" / "domains"
+for domain_dir in domains_path.iterdir():
+    if domain_dir.is_dir() and domain_dir.name != "auth":
+        try:
+            module = importlib.import_module(f"app.domains.{domain_dir.name}.router")
+            if hasattr(module, "router"):
+                app.include_router(module.router, prefix=f"/api/v1/{domain_dir.name}")
+                print(f"✅ Router '{domain_dir.name}' inclus")
+        except ModuleNotFoundError:
+            print(f"⚠️ Aucun router trouvé pour '{domain_dir.name}'")
+            continue
+    '''
+
         return f'''{chr(10).join(imports)}
-{chr(10).join(imports)}
 
 @asynccontextmanager
 async def lifespan(app):
-{startup_block}
+    {startup_block}
     yield
     # Shutdown (si nécessaire)
 
@@ -283,6 +323,8 @@ async def health_check():
     return {{"status": "healthy"}}
 
 {chr(10).join(router_includes)}
+
+{dynamic_router_code}
 
 if __name__ == "__main__":
     import uvicorn
@@ -446,7 +488,7 @@ async def get_user(user_id: int):
 
 ## 🌐 CORS
 
-CORS est activé via `app/core/cors.py`. Modifiez origines/méthodes/headers dans ce fichier.
+CORS est activé via `app/core/config.py`. Modifiez origines/méthodes/headers dans ce fichier.
 
 '''
 
