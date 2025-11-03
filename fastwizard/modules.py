@@ -35,7 +35,7 @@ class ModuleManager:
             files=[
                 {
                     "path": "app/database.py",
-                    "template": "database/db_postgresql.py"
+                    "template": "database/postgresql/db_postgresql.py"
                 },
                 {
                     "path": "alembic.ini",
@@ -48,6 +48,32 @@ class ModuleManager:
             ],
             config={
                 "database_url": "postgresql://user:password@localhost/dbname",
+                "echo": False
+            }
+        )
+
+        # Module Base de données MySQL
+        modules["db-mysql"] = ModuleInfo(
+            id="db-mysql",
+            name="Base de données MySQL",
+            description="Configuration MySQL avec SQLAlchemy et Alembic",
+            dependencies=["sqlalchemy", "alembic", "mysqlclient"],
+            files=[
+                {
+                    "path": "app/database.py",
+                    "template": "database/mysql/db_mysql.py"
+                },
+                {
+                    "path": "alembic.ini",
+                    "template": "database/alembic_ini.py"
+                },
+                {
+                    "path": "alembic/env.py",
+                    "template": "database/alembic_env.py"
+                }
+            ],
+            config={
+                "database_url": "mysql://user:password@localhost/dbname",
                 "echo": False
             }
         )
@@ -191,11 +217,6 @@ class ModuleManager:
         """Valide les combinaisons de modules et retourne les avertissements"""
         warnings = []
         
-        # Vérifier les conflits de base de données
-        db_modules = [mid for mid in module_ids if mid.startswith("db-")]
-        if len(db_modules) > 1:
-            warnings.append(f"Conflit détecté : plusieurs modules de base de données sélectionnés ({', '.join(db_modules)})")
-        
         # Vérifier les dépendances manquantes
         #if "crud" in module_ids and not any(mid.startswith("db-") for mid in module_ids):
         #    warnings.append("Le module CRUD nécessite un module de base de données")
@@ -205,5 +226,8 @@ class ModuleManager:
         
         if "auth-permissions" in module_ids and "auth-jwt" not in module_ids:
             warnings.append("LE MODULE AUTH-PERMISSIONS NECESSITE LE MODULE AUTH-JWT")
+
+        if "db-mysql" in module_ids and "db-postgresql" in module_ids:
+            warnings.append("CONFLIT DETECTE : LES MODULES DB-MYSQL ET DB-POSTGRESQL NE PEUVENT PAS ETRE UTILISES ENSEMBLE")
 
         return warnings

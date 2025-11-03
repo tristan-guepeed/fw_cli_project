@@ -102,7 +102,6 @@ class ProjectGenerator:
     
     def _generate_main_files(self, project_path: Path, project_name: str, selected_modules: List[str], db_config: dict = None):
         """Génère les fichiers principaux du projet"""
-        
         # main.py
         main_content = self._get_main_template(project_name, selected_modules)
         (project_path / "main.py").write_text(main_content)
@@ -121,8 +120,8 @@ class ProjectGenerator:
         
         # .gitignore
         gitignore_content = self._get_gitignore_template()
-        (project_path / ".gitignore").write_text(gitignore_content)
-    
+        (project_path / ".gitignore").write_text(gitignore_content) 
+
     def _generate_modules(self, project_path: Path, selected_modules: List[str]):
         """Génère les fichiers des modules sélectionnés"""
         
@@ -135,11 +134,12 @@ class ProjectGenerator:
                 
                 # Pour l'instant, on crée des fichiers de base
                 # Dans une version complète, on utiliserait des templates
-                template_content = self._get_template_content(file_info["template"], module.config)
+                config = {**module.config, "selected_modules": selected_modules}
+                template_content = self._get_template_content(file_info["template"], config)   
                 file_path.write_text(template_content)
 
             # Si base de données PostgreSQL sélectionnée, créer une migration initiale Alembic
-            if module_id == "db-postgresql":
+            if module_id == "db-postgresql" or module_id == "db-mysql":
                 self._ensure_initial_migration(project_path, include_user=("auth-jwt" in selected_modules))
     
     def _finalize_project(self, project_path: Path, project_name: str, selected_modules: List[str]):
@@ -537,11 +537,11 @@ docker compose exec app alembic revision --autogenerate -m "Description"
 
 ### Visualisation de la base de données
 
-Adminer est inclus pour visualiser et gérer la base de données PostgreSQL :
+Adminer est inclus pour visualiser et gérer la base de données PostgreSQL ou MySQL.:
 
 1. Accédez à [http://localhost:8080](http://localhost:8080)
 2. Utilisez les informations de connexion :
-   - **Système** : PostgreSQL
+   - **Système** : PostgreSQL/MySQL
    - **Serveur** : db
    - **Utilisateur** : fastapi_user
    - **Mot de passe** : fastapi_password
@@ -678,7 +678,6 @@ Thumbs.db
     
     def _get_template_content(self, template_name: str, config: Dict[str, Any]) -> str:
         """Récupère le contenu d'un template"""
-        
         # Essayer de charger le template depuis un fichier
         # Le template_name peut maintenant contenir un chemin relatif (ex: "auth/auth_jwt_handler")
         template_file = self.templates_dir / f"{template_name.replace('.py', '')}.py"
@@ -702,89 +701,6 @@ Thumbs.db
                 return self._get_fallback_template(template_name, config)
         else:
             return self._get_fallback_template(template_name, config)
-    
-    def _get_fallback_template(self, template_name: str, config: Dict[str, Any]) -> str:
-        """Templates de fallback pour les cas où les fichiers de templates n'existent pas"""
-        
-        if template_name == "Dockerfile.py":
-            python_version = config.get("python_version", "3.11")
-            port = config.get("port", 8000)
-            return f'''FROM python:{python_version}-slim
-
-WORKDIR /app
-
-RUN apt-get update && apt-get install -y \\
-    gcc \\
-    && rm -rf /var/lib/apt/lists/*
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-EXPOSE {port}
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "{port}"]
-'''
-        
-        elif template_name == "docker_compose.py":
-            port = config.get("port", 8000)
-            adminer_port = config.get("adminer_port", 8080)
-            return f''' 
-
-services:
-  app:
-    build: .
-    ports:
-      - "{port}:{port}"
-    environment:
-      - DEBUG=True
-    volumes:
-      - .:/app
-    restart: unless-stopped
-    networks:
-      - fastapi-network
-
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: fastapi_db
-      POSTGRES_USER: fastapi_user
-      POSTGRES_PASSWORD: fastapi_password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - fastapi-network
-
-  adminer:
-    image: adminer:4.8.1
-    ports:
-      - "{adminer_port}:8080"
-    environment:
-      ADMINER_DEFAULT_SERVER: db
-    depends_on:
-      - db
-    networks:
-      - fastapi-network
-    restart: unless-stopped
-
-volumes:
-  postgres_data:
-
-networks:
-  fastapi-network:
-    driver: bridge
-'''
-        
-        else:
-            return f'''# Template: {template_name}
-# Configuration: {config}
-
-# TODO: Implémenter le template {template_name}
-pass
-'''
     
     def _update_main_with_modules(self, project_path: Path, selected_modules: List[str]):
         """Met à jour main.py avec les modules sélectionnés"""
