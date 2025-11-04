@@ -66,6 +66,7 @@ fastwizard version
 - **`auth-permissions`**: Dépend de `auth-jwt`. Dépendances prêtes: `require_admin`, `require_self_or_admin_by_param`, `require_self_or_admin_by_owner`.
 - **`cors`**: CORS configurable via `app/core/cors.py` (origines, méthodes, headers, credentials) et appliqué dans `main.py`.
 - **`docker`**: `Dockerfile`, `docker-compose.yml`, `.dockerignore` (avec Postgres + Adminer en option).
+- **`linting`**: `Ruff`, `Black`et `pre-commit` ready pour vérifier le code avant chaque commit.
 
 ## 📁 Structure générée
 
@@ -82,6 +83,8 @@ mon-projet-fastapi/
 ├── tests/               # Tests unitaires
 ├── main.py              # Point d'entrée
 ├── requirements.txt     # Dépendances
+├── pyproject.toml       # Fichier .toml
+├── pre-commit-config.yaml # Fichier .yaml
 ├── Dockerfile           # Configuration Docker
 ├── docker-compose.yml   # Orchestration Docker
 ├── .env.example         # Variables d'environnement
@@ -141,6 +144,9 @@ Inclure le module db-postgresql ? [y/n] (n): y
 Inclure le module docker ? [y/n] (n): y
 ✅ docker ajouté
 
+Inclure le module linting ? [y/n] (n): y
+✅ linting ajouté
+
 📋 Récapitulatif :
    📁 Nom du projet : mon-api-fastapi
    🔧 Modules sélectionnés : 2
@@ -161,6 +167,14 @@ Inclure le module docker ? [y/n] (n): y
    python -m uvicorn main:app --reload
    "Si docker :"
    docker compose up --build
+
+ Linting & Formatting activés
+Pour activer les hooks git (recommandé) :
+   pip install pre-commit
+   pre-commit install
+
+Test direct :
+   pre-commit run --all-files
 ```
 
 ## 🙏 Outils

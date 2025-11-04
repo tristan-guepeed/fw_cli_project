@@ -1,4 +1,5 @@
 """Template pour Dockerfile"""
+
 def get_template(config):
     python_version = config.get("python_version", "3.11")
     port = config.get("port", 8000)

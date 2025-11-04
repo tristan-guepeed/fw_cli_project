@@ -219,6 +219,25 @@ class ModuleManager:
             config={}
         )
 
+        # Module de linting
+        modules["linting"] = ModuleInfo(
+            id="linting",
+            name="Linting et formatage",
+            description="Configuration des outils de linting et formatage (ruff + import sorter)",
+            dependencies=["ruff", "black", "pre-commit"],
+            files=[
+                {
+                    "path": "pyproject.toml",
+                    "template": "linting/ruff_toml.py"
+                },
+                {
+                    "path": ".pre-commit-config.yaml",
+                    "template": "linting/pre-commit_config.py"
+                }
+            ],
+            config={}
+        )
+
         return modules
     
     def get_available_modules(self) -> Dict[str, Dict[str, Any]]:
