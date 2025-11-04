@@ -121,7 +121,11 @@ class ProjectGenerator:
         
         # .gitignore
         gitignore_content = self._get_gitignore_template()
-        (project_path / ".gitignore").write_text(gitignore_content) 
+        (project_path / ".gitignore").write_text(gitignore_content)
+
+        # makefile
+        makefile_content = self._generate_makefile(selected_modules)
+        (project_path / "Makefile").write_text(makefile_content)
 
     def _generate_modules(self, project_path: Path, selected_modules: List[str]):
         """Génère les fichiers des modules sélectionnés"""
@@ -762,6 +766,115 @@ Thumbs.db
 *.sqlite3
 
 '''
+
+    def _generate_makefile(self, selected_modules: List[str]) -> str:
+        env_vars = [
+            "# Makefile pour simplifier les commandes de développement",
+            "",
+            ".PHONY: help venv deps activate up down migrate migrate-upgrade migrate-revision run",
+            "",
+            "# Variables",
+            "VENV_NAME ?= venv",
+            "APP_NAME ?= app",
+        ]
+
+        if "docker" in selected_modules:
+            env_vars.extend([
+                "",
+                "# Afficher l'aide",
+                "help:",
+                "\t@echo \"Utilisation :\"",
+                "\t@echo \"  make venv       - Créer l'environnement virtuel\"",
+                "\t@echo \"  make deps       - Installer les dépendances\"",
+                "\t@echo \"  make activate   - Activer l'environnement (manuel)\"",
+                "\t@echo \"  make install    - Installer les dépendances dans l'environnement\"",
+                "\t@echo \"  make up         - Démarrer les services avec Docker Compose\"",
+                "\t@echo \"  make down       - Arrêter les services et supprimer les volumes\"",
+                "\t@echo \"  make migrate    - Exécuter les migrations Alembic\"",
+                "\t@echo \"  make migrate-revision message='msg' - Créer une migration auto\"",
+                "\t@echo \"  make run        - Lancer Uvicorn en mode reload\"",
+                "",
+                "# Créer l'environnement virtuel",
+                "venv:",
+                "\tpython3 -m venv $(VENV_NAME)",
+                "",
+                "# Activer l'environnement (à exécuter manuellement dans le shell)",
+                "activate:",
+                "\t@echo \"Pour activer l'environnement : source $(VENV_NAME)/bin/activate\"",
+                "",
+                "install:",
+                "\tpip install -r requirements.txt",
+                "",
+                "# Installer les dépendances",
+                "deps: venv",
+                "\tsource $(VENV_NAME)/bin/activate && make install",
+                "",
+                "# Démarrer les services Docker",
+                "up:",
+                "\tdocker compose up --build",
+                "",
+                "# Arrêter les services et supprimer les volumes",
+                "down:",
+                "\tdocker compose down --volumes",
+                "",
+                "# Exécuter les migrations Alembic",
+                "migrate:",
+                "\tdocker compose exec $(APP_NAME) alembic upgrade head",
+                "",
+                "# Créer une migration automatique",
+                "migrate-revision:",
+                "\t@if [ -z \"$${message}\" ]; then \\",
+                "\t\techo \"Usage: make migrate-revision message='Description'\"; \\",
+                "\telse \\",
+                "\t\tdocker compose exec $(APP_NAME) alembic revision --autogenerate -m \"$message\"; \\",
+                "\tfi",
+                "",
+                "# Lancer Uvicorn en mode développement",
+                "run:",
+                "\tuvicorn main:app --reload   ",
+            ])
+        else:
+            env_vars.extend([
+                "# Afficher l'aide",
+                "help:",
+                "\t@echo \"Utilisation :\"",
+                "\t@echo \"  make venv       - Créer l'environnement virtuel\"",
+                "\t@echo \"  make deps       - Installer les dépendances\"",
+                "\t@echo \"  make activate   - Activer l'environnement (manuel)\"",
+                "\t@echo \"  make install    - Installer les dépendances dans l'environnement\"",
+                "\t@echo \"  make run        - Lancer Uvicorn en mode reload\"",
+                "",
+                "# Créer l'environnement virtuel",
+                "venv:",
+                "\tpython3 -m venv $(VENV_NAME)",
+                "",
+                "# Activer l'environnement (à exécuter manuellement dans le shell)",
+                "activate:",
+                "\t@echo \"Pour activer l'environnement : source $(VENV_NAME)/bin/activate\"",
+                "",
+                "install:",
+                "\tpip install -r requirements.txt",
+                "",
+                "# Installer les dépendances",
+                "deps: venv",
+                "\tsource $(VENV_NAME)/bin/activate && make install",
+                "",
+                "# Exécuter les migrations Alembic",
+                "migrate:",
+                "\talembic upgrade head",
+                "",
+                "# Créer une migration automatique",
+                "migrate-revision:",
+                "\t@if [ -z \"$${message}\" ]; then \\",
+                "\t\techo \"Usage: make migrate-revision message='Description'\"; \\",
+                "\telse \\",
+                "\t\talembic revision --autogenerate -m \"$message\"; \\",
+                "\tfi",
+                "# Lancer Uvicorn en mode développement",
+                "run:",
+                "\tuvicorn main:app --reload   ",
+            ])
+        return "\n".join(env_vars)
     
     def _get_template_content(self, template_name: str, config: Dict[str, Any]) -> str:
         """Récupère le contenu d'un template"""
