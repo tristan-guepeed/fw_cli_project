@@ -66,6 +66,7 @@ fastwizard version
 - **`auth-permissions`**: Dépend de `auth-jwt`. Dépendances prêtes: `require_admin`, `require_self_or_admin_by_param`, `require_self_or_admin_by_owner`.
 - **`cors`**: CORS configurable via `app/core/cors.py` (origines, méthodes, headers, credentials) et appliqué dans `main.py`.
 - **`docker`**: `Dockerfile`, `docker-compose.yml`, `.dockerignore` (avec Postgres + Adminer en option).
+- **`makefile`**: `Makefile`
 - **`linting`**: `Ruff`, `Black`et `pre-commit` ready pour vérifier le code avant chaque commit.
 
 ## 📁 Structure générée
@@ -87,6 +88,7 @@ mon-projet-fastapi/
 ├── pre-commit-config.yaml # Fichier .yaml
 ├── Dockerfile           # Configuration Docker
 ├── docker-compose.yml   # Orchestration Docker
+├── Makefile             # Makefile
 ├── .env.example         # Variables d'environnement
 └── README.md           # Documentation
 ```

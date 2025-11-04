@@ -483,6 +483,7 @@ async def get_user(user_id: int):
 - `tests/` : Tests unitaires et d'intégration.
 - `alembic/` & `alembic.ini` : Migrations DB (si DB activée).
 - `Dockerfile` & `docker-compose.yml` : Conteneurisation (si Docker activé).
+- `Makefile` : Simplifie les commandes de développement (si Makefile activé).
 
 '''
 
@@ -527,6 +528,10 @@ uvicorn main:app --reload
 # Avec Docker
 docker compose up --build
 {migrations_hint}
+
+# Avec Makefile
+make up
+make migrate
 ```
 
 L'API sera disponible sur [http://localhost:8000](http://localhost:8000)
