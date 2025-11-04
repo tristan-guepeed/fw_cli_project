@@ -602,8 +602,10 @@ curl -X GET "http://localhost:8000/api/v1/auth/me" \\
 │   └── middleware/      # Middleware personnalisés
 ├── tests/               # Tests unitaires
 ├── main.py              # Point d'entrée
+├── pyproject.toml       # Fichier .toml
+├── pre-commit-config.yaml # Fichier .yaml
 ├── requirements.txt     # Dépendances
-└── README.md           # Ce fichier
+└── README.md            # Ce fichier
 ```
 
 {permissions_section}
