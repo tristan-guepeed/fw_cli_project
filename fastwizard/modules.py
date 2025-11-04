@@ -196,6 +196,15 @@ class ModuleManager:
             }
         )
 
+        modules["makefile"] = ModuleInfo(
+            id="makefile",
+            name="Makefile",
+            description="Fournit un Makefile pour simplifier les commandes de développement",
+            dependencies=[],
+            files=[],
+            config={}
+        )
+
         modules["crud"] = ModuleInfo(
             id="crud",
             name="Générateur CRUD",

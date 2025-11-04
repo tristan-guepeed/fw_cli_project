@@ -10,9 +10,10 @@ def get_template(config):
 WORKDIR /app
 
 # Installer les dépendances système
-RUN apt-get update && apt-get install -y \\
-    gcc \\
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    default-libmysqlclient-dev \
+    build-essential \
+    pkg-config   
 
 # Copier les fichiers de dépendances
 COPY requirements.txt .
