@@ -80,11 +80,8 @@ def new():
         # si le module linting est présent -> installation pre-commit
         if "linting" in selected_modules:
             console.print("\n🧹 [bold cyan]Linting & Formatting activés[/bold cyan]")
-            console.print("Pour activer les hooks git (recommandé) :")
-            console.print("   pip install pre-commit")
-            console.print("   pre-commit install\n")
-            console.print("Test direct :")
-            console.print("   pre-commit run --all-files\n")
+            console.print("    ruff check .")
+            console.print("    black .")
         
     except Exception as e:
         console.print(f"❌ [red]Erreur lors de la génération :[/red] {str(e)}")

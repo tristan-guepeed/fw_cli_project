@@ -85,7 +85,6 @@ mon-projet-fastapi/
 ├── main.py              # Point d'entrée
 ├── requirements.txt     # Dépendances
 ├── pyproject.toml       # Fichier .toml
-├── pre-commit-config.yaml # Fichier .yaml
 ├── Dockerfile           # Configuration Docker
 ├── docker-compose.yml   # Orchestration Docker
 ├── Makefile             # Makefile
@@ -169,14 +168,6 @@ Inclure le module linting ? [y/n] (n): y
    python -m uvicorn main:app --reload
    "Si docker :"
    docker compose up --build
-
- Linting & Formatting activés
-Pour activer les hooks git (recommandé) :
-   pip install pre-commit
-   pre-commit install
-
-Test direct :
-   pre-commit run --all-files
 ```
 
 ## 🙏 Outils
