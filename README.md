@@ -68,6 +68,7 @@ fastwizard version
 - **`docker`**: `Dockerfile`, `docker-compose.yml`, `.dockerignore` (avec Postgres + Adminer en option).
 - **`makefile`**: `Makefile`
 - **`linting`**: `Ruff`, `Black`et `pre-commit` ready pour vérifier le code avant chaque commit.
+- **`crud`**: génération de routes CRUD via création de modèles
 
 ## 📁 Structure générée
 
