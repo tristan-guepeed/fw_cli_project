@@ -73,6 +73,9 @@ def new():
         console.print("   python -m uvicorn main:app --reload")
         console.print("   Avec Docker :")
         console.print("   docker compose up --build")
+        console.print("   Avec Makefile :")
+        console.print("   make up")
+        console.print("   make migrate")
 
         # si le module linting est présent -> installation pre-commit
         if "linting" in selected_modules:
