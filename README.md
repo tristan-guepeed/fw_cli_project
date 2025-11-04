@@ -67,7 +67,7 @@ fastwizard version
 - **`cors`**: CORS configurable via `app/core/cors.py` (origines, méthodes, headers, credentials) et appliqué dans `main.py`.
 - **`docker`**: `Dockerfile`, `docker-compose.yml`, `.dockerignore` (avec Postgres + Adminer en option).
 - **`makefile`**: `Makefile`
-- **`linting`**: `Ruff`, `Black`et `pre-commit` ready pour vérifier le code avant chaque commit.
+- **`linting`**: `Ruff`, `Black` ready pour vérifier le code.
 - **`crud`**: génération de routes CRUD via création de modèles
 
 ## 📁 Structure générée
