@@ -4,7 +4,7 @@ Template pour l'initialisation de Ruff
 
 
 def get_template(config):
-    return """[tool.black]
+    return """r[tool.black]
 line-length = 88
 target-version = ["py311"]
 exclude = '''
