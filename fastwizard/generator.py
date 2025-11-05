@@ -83,7 +83,8 @@ class ProjectGenerator:
             "app/core",
             "app/middleware",
             "app/domains",
-            "tests"
+            "tests",
+            "logs",
         ]
         
         for directory in directories:
@@ -451,6 +452,9 @@ if __name__ == "__main__":
                 "# ===============================",
                 "LOG_LEVEL=INFO",
                 "LOG_FORMAT=plain",
+                "LOG_FILE=logs/app.log",
+                "LOG_MAX_BYTES=5000000",
+                "LOG_BACKUP_COUNT=5",
                 "",
             ])
 
@@ -498,6 +502,8 @@ async def get_user(user_id: int):
 ## 📄 Logging
 
 Le logging est configuré via `app/core/logging.py`. Les niveaux de log et le format peuvent être ajustés dans ce fichier.
+
+Les logs sont également écrits dans `logs/app.log` (configurable via .env).
 
 Exemple d'utilisation dans une route FastAPI :
 ```from fastapi import APIRouter, Depends, HTTPException
