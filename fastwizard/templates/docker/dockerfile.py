@@ -28,5 +28,5 @@ COPY . .
 EXPOSE {port}
 
 # Commande par défaut
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "{port}"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "{port}", "--use-colors"]
 '''

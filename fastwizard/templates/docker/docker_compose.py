@@ -41,6 +41,9 @@ services:
       - DEBUG=True
       - DOCKER_ENV=True
       - DATABASE_URL={database_url}
+      - TERM=xterm-256color  # ✅ Force le support des couleurs
+      - FORCE_COLOR=1  # ✅ Force les couleurs pour Rich
+      - PYTHONUNBUFFERED=1  # ✅ Désactive le buffering pour voir les logs en temps réel
     volumes:
       - .:/app
     restart: unless-stopped

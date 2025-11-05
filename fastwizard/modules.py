@@ -230,9 +230,19 @@ class ModuleManager:
                     "path": "pyproject.toml",
                     "template": "linting/ruff_toml.py"
                 },
+            ],
+            config={}
+        )
+
+        modules["logging"] = ModuleInfo(
+            id="logging",
+            name="Logging",
+            description="Configuration des outils de logging (loguru)",
+            dependencies=["loguru", "rich"],
+            files=[
                 {
-                    "path": ".pre-commit-config.yaml",
-                    "template": "linting/pre-commit_config.py"
+                    "path": "app/core/logging.py",
+                    "template": "core/logging.py"
                 }
             ],
             config={}

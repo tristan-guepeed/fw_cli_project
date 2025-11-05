@@ -262,6 +262,11 @@ def downgrade() -> None:
 
         if "config" in selected_modules or "cors" in selected_modules:
             imports.append("from app.core.config import get_settings")
+        
+        if "logging" in selected_modules:
+            imports.append("from app.core.logging import setup_logging")
+            imports.append("import logging")
+
 
         # Ajouter import pour inclusion dynamique
         imports.append("import importlib")
@@ -269,12 +274,18 @@ def downgrade() -> None:
 
         # Startup block
         startup_lines = ["# Startup"]
+
+        # Logging en premier si sélectionné
+        if "logging" in selected_modules:
+            startup_lines.append("setup_logging()  # Initialisation du logging")
+            startup_lines.append("logger = logging.getLogger(__name__)")
+
         if any(m.startswith("db-") for m in selected_modules):
             startup_lines.append(
-                "print(\"ℹ️ Démarrage: utilisez Alembic pour gérer les migrations (docker compose exec app alembic upgrade head).\")"
+                "logger.warning(\"⚠️  Utilisez Alembic pour les migrations (docker compose exec app alembic upgrade head)\")"
             )
         else:
-            startup_lines.append("print(\"ℹ️ Démarrage de l'application\")")
+            startup_lines.append("logger.info(\"🚀 Démarrage de l'application\")")
         indent = "    "
         startup_block = "\n".join([indent + line for line in startup_lines])
 
@@ -306,6 +317,7 @@ async def lifespan(app):
     {startup_block}
     yield
     # Shutdown (si nécessaire)
+    print("🛑 Arrêt de l'application")
 
 app = FastAPI(
     title="{project_name}",
@@ -431,6 +443,17 @@ if __name__ == "__main__":
                 "",
             ])
 
+        # --- Logging ---
+        if "logging" in selected_modules:
+            env_vars.extend([
+                "# ===============================",
+                "# 📄 Logging",
+                "# ===============================",
+                "LOG_LEVEL=INFO",
+                "LOG_FORMAT=plain",
+                "",
+            ])
+
         return "\n".join(env_vars)
 
     def _generate_readme(self, project_name: str, selected_modules: List[str]) -> str:
@@ -466,6 +489,36 @@ async def get_user(user_id: int):
     return {"user_id": user_id}
 ```
 '''
+
+        # Logging section
+        logging_section = ''
+        if "logging" in selected_modules:
+            logging_section = '''
+
+## 📄 Logging
+
+Le logging est configuré via `app/core/logging.py`. Les niveaux de log et le format peuvent être ajustés dans ce fichier.
+
+Exemple d'utilisation dans une route FastAPI :
+```from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.domains.food import services as food_services
+from app.domains.food.schemas import Food, FoodCreate, FoodUpdate
+import logging
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/foods", tags=["Food"])
+
+@router.get("/", response_model=list[Food])
+def read_all(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    logger.info(f"📋 Lecture de tous les Foods skip={skip}, limit={limit}")
+    foods = food_services.get_food(db, skip=skip, limit=limit)
+    logger.info(f"✅ Retour de {len(foods)} Foods")
+    return foods
+'''
+
 
         # Sections explicatives détaillées
         structure_details = '''
@@ -619,6 +672,7 @@ curl -X GET "http://localhost:8000/api/v1/auth/me" \\
 
 {permissions_section}
 {cors_section}
+{logging_section}
 {structure_details}
 
 ## 🛠️ Développement
@@ -887,6 +941,7 @@ Thumbs.db
         """Récupère le contenu d'un template"""
         # Essayer de charger le template depuis un fichier
         # Le template_name peut maintenant contenir un chemin relatif (ex: "auth/auth_jwt_handler")
+        print(f"Chargement du template: {template_name}")
         template_file = self.templates_dir / f"{template_name.replace('.py', '')}.py"
         
         if template_file.exists():
