@@ -569,12 +569,22 @@ CORS est activé via `app/core/config.py`. Modifiez origines/méthodes/headers d
 
 '''
 
+        cache_section = ''
+        if "cache-redis" in selected_modules or "cache-valkey" in selected_modules:
+            cache_section = '''
+## 🗄️ Cache
+
+Le cache est configuré via `app/core/cache.py`. Modifiez les paramètres de connexion dans ce fichier.
+'''
+
         # Ajouter un rappel migrations dans démarrage rapide si DB active
         migrations_hint = ''
         if any(m.startswith('db-') for m in selected_modules):
             migrations_hint = '\n# Appliquer les migrations (nécessite Alembic configuré)\n# Une migration initiale est créée automatiquement dans alembic/versions/\ndocker compose exec app alembic upgrade head\n'
 
         return f'''# {project_name}
+
+
 
 Projet FastAPI généré avec [FastWizard](https://github.com/your-repo/fastwizard) 🧙‍♂️
 

@@ -70,6 +70,7 @@ fastwizard version
 - **`linting`**: `Ruff`, `Black` ready pour vérifier le code.
 - **`crud`**: génération de routes CRUD via création de modèles
 - **`logging`**: logs pertinents
+- **`redis`** / **`valkey`**: cache
 
 ## 📁 Structure générée
 
