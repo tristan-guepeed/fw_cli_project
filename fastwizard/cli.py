@@ -3,6 +3,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
 from rich.table import Table
+from rich.prompt import IntPrompt
 from typing import List, Dict, Any
 import os
 import json
@@ -148,7 +149,6 @@ def prompt_module_fields():
     return app_name, fields, ModelName
 
 
-
 def select_modules() -> List[str]:
     """
     Interface interactive pour sélectionner les modules
@@ -156,31 +156,58 @@ def select_modules() -> List[str]:
     console.print("🔧 [bold]Sélection des modules :[/bold]")
     console.print("Choisissez les modules à inclure dans votre projet FastAPI\n")
     
-    # Affichage des modules disponibles
     available_modules = module_manager.get_available_modules()
-    table = Table(title="Modules disponibles")
-    table.add_column("Module", style="cyan", no_wrap=True)
-    table.add_column("Description", style="white")
-    table.add_column("Dépendances", style="yellow")
-    
-    for module_id, module_info in available_modules.items():
-        deps = ", ".join(module_info.get("dependencies", []))
-        table.add_row(
-            module_id,
-            module_info.get("description", ""),
-            deps if deps else "Aucune"
-        )
-    
-    console.print(table)
-    console.print()
-    
     selected = []
+
+    # === 1️⃣ Sélection des bases de données ===
+    db_modules = [mid for mid in available_modules if mid.startswith("db-")]
+
+    if db_modules and Confirm.ask("💾 [bold]Souhaitez-vous intégrer une base de données ?[/bold]", default=True):
+        console.print("\n📚 [bold cyan]Bases de données disponibles :[/bold cyan]")
+        for i, mid in enumerate(db_modules, start=1):
+            console.print(f"  {i}. {available_modules[mid]['name']} ({mid})")
+        console.print()
+        
+        choice = IntPrompt.ask(
+            "👉 [bold]Choisissez une base de données (numéro)[/bold]",
+            choices=[str(i) for i in range(1, len(db_modules) + 1)]
+        )
+        chosen_db = db_modules[int(choice) - 1]
+        selected.append(chosen_db)
+        console.print(f"✅ [green]{chosen_db}[/green] ajouté\n")
+    else:
+        console.print("⏭️  [dim]Aucune base de données sélectionnée[/dim]\n")
+
+    # === 2️⃣ Sélection du système de cache ===
+    cache_modules = [mid for mid in available_modules if mid.startswith("cache-")]
+
+    if cache_modules and Confirm.ask("🧠 [bold]Souhaitez-vous intégrer un système de cache ?[/bold]", default=False):
+        console.print("\n⚡ [bold cyan]Systèmes de cache disponibles :[/bold cyan]")
+        for i, mid in enumerate(cache_modules, start=1):
+            console.print(f"  {i}. {available_modules[mid]['name']} ({mid})")
+        console.print()
+
+        choice = IntPrompt.ask(
+            "👉 [bold]Choisissez un système de cache (numéro)[/bold]",
+            choices=[str(i) for i in range(1, len(cache_modules) + 1)]
+        )
+        chosen_cache = cache_modules[int(choice) - 1]
+        selected.append(chosen_cache)
+        console.print(f"✅ [green]{chosen_cache}[/green] ajouté\n")
+    else:
+        console.print("⏭️  [dim]Aucun système de cache sélectionné[/dim]\n")
+
+    # === 3️⃣ Autres modules ===
     for module_id, module_info in available_modules.items():
+        # ignorer les modules déjà sélectionnés ou appartenant à des catégories spéciales
+        if module_id in db_modules or module_id in cache_modules:
+            continue
+
         if Confirm.ask(f"Inclure le module [bold cyan]{module_id}[/bold cyan] ?", default=False):
             selected.append(module_id)
             console.print(f"✅ [green]{module_id}[/green] ajouté")
 
-            # Cas spécial pour CRUD
+            # Cas spécial : CRUD
             if module_id == "crud":
                 while True:
                     app_name, fields, ModelName = prompt_module_fields()
@@ -197,8 +224,10 @@ def select_modules() -> List[str]:
         else:
             console.print(f"⏭️  [dim]{module_id}[/dim] ignoré")
         console.print()
-    
+
     return selected
+
+
 
 def confirm_generation(project_name: str, selected_modules: List[str]):
     """

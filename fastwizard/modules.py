@@ -248,6 +248,41 @@ class ModuleManager:
             config={}
         )
 
+        # Module Cache Redis
+        modules["cache-redis"] = ModuleInfo(
+            id="cache-redis",
+            name="Cache Redis",
+            description="Intégration de Redis pour le cache, les sessions et les tâches en arrière-plan.",
+            dependencies=["redis"],
+            files=[
+                {
+                    "path": "app/core/cache.py",
+                    "template": "cache/redis_cache.py"
+                }
+            ],
+            config={
+                "redis_url": "redis://redis:6379/0"
+            }
+        )
+        
+        # Module Cache Valkey (fork open-source de Redis)
+        modules["cache-valkey"] = ModuleInfo(
+            id="cache-valkey",
+            name="Cache Valkey",
+            description="Intégration de Valkey (compatible Redis) pour la gestion du cache.",
+            dependencies=["redis"],
+            files=[
+                {
+                    "path": "app/core/cache.py",
+                    "template": "cache/valkey_cache.py"
+                }
+            ],
+            config={
+                "valkey_url": "redis://valkey:6379/0"
+            }
+        )
+
+
         return modules
     
     def get_available_modules(self) -> Dict[str, Dict[str, Any]]:

@@ -263,11 +263,20 @@ def downgrade() -> None:
 
         if "config" in selected_modules or "cors" in selected_modules:
             imports.append("from app.core.config import get_settings")
-        
+
         if "logging" in selected_modules:
             imports.append("from app.core.logging import setup_logging")
             imports.append("import logging")
 
+        # === Cache (Redis / Valkey) ===
+        if "cache-redis" in selected_modules:
+            imports.append("from app.core.cache import lifespan as redis_lifespan")
+            lifespan_name = "redis_lifespan"
+        elif "cache-valkey" in selected_modules:
+            imports.append("from app.core.cache import lifespan as valkey_lifespan")
+            lifespan_name = "valkey_lifespan"
+        else:
+            lifespan_name = None
 
         # Ajouter import pour inclusion dynamique
         imports.append("import importlib")
@@ -276,7 +285,6 @@ def downgrade() -> None:
         # Startup block
         startup_lines = ["# Startup"]
 
-        # Logging en premier si sélectionné
         if "logging" in selected_modules:
             startup_lines.append("setup_logging()  # Initialisation du logging")
             startup_lines.append("logger = logging.getLogger(__name__)")
@@ -287,6 +295,7 @@ def downgrade() -> None:
             )
         else:
             startup_lines.append("logger.info(\"🚀 Démarrage de l'application\")")
+
         indent = "    "
         startup_block = "\n".join([indent + line for line in startup_lines])
 
@@ -309,13 +318,16 @@ for domain_dir in domains_path.iterdir():
         except ModuleNotFoundError:
             print(f"⚠️ Aucun router trouvé pour '{domain_dir.name}'")
             continue
-    '''
+'''
+
+        # Définir le lifespan final
+        lifespan_expr = lifespan_name if lifespan_name else "asynccontextmanager(lambda app: (yield))"
 
         return f'''{chr(10).join(imports)}
 
 @asynccontextmanager
 async def lifespan(app):
-    {startup_block}
+{startup_block}
     yield
     # Shutdown (si nécessaire)
     print("🛑 Arrêt de l'application")
@@ -326,7 +338,7 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan
+    lifespan={lifespan_expr}
 )
 
 {chr(10).join(middleware_setup)}
@@ -347,6 +359,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 '''
+
     
     def _generate_requirements(self, selected_modules: List[str]) -> str:
         """Génère le fichier requirements.txt"""
