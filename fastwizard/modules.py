@@ -282,6 +282,25 @@ class ModuleManager:
             }
         )
 
+        # Module WebSocket (via Starlette / FastAPI)
+        modules["websocket"] = ModuleInfo(
+            id="websocket",
+            name="WebSocket",
+            description="Module WebSocket pour FastAPI utilisant Starlette pour la gestion des connexions et rooms.",
+            dependencies=[],  # pas besoin de dépendances externes, FastAPI/Starlette suffisent
+            files=[
+                {
+                    "path": "app/core/websocket.py",
+                    "template": "websocket/websocket_module.py"
+                },
+                {
+                    "path": "app/domains/ws/router.py",
+                    "template": "websocket/websocket_router.py"
+                }
+            ],
+            config={}
+        )
+
 
         return modules
     

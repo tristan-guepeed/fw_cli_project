@@ -278,6 +278,11 @@ def downgrade() -> None:
         else:
             lifespan_name = None
 
+        # Inclusion du router WebSocket si le module est sélectionné
+        if "websocket" in selected_modules:
+            imports.append("from app.domains.ws.router import router as ws_router")
+            router_includes.append("app.include_router(ws_router, prefix='/ws', tags=['ws'])")
+
         # Ajouter import pour inclusion dynamique
         imports.append("import importlib")
         imports.append("from pathlib import Path")
@@ -575,6 +580,14 @@ CORS est activé via `app/core/config.py`. Modifiez origines/méthodes/headers d
 ## 🗄️ Cache
 
 Le cache est configuré via `app/core/cache.py`. Modifiez les paramètres de connexion dans ce fichier.
+'''
+
+        websocket_section = ''
+        if "websocket" in selected_modules:
+            websocket_section = '''
+## 📡 WebSocket
+
+Le module WebSocket est activé. Les routes WebSocket sont définies dans `app/domains/ws/router.py`.
 '''
 
         # Ajouter un rappel migrations dans démarrage rapide si DB active

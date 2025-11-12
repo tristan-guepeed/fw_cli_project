@@ -71,6 +71,7 @@ fastwizard version
 - **`crud`**: génération de routes CRUD via création de modèles
 - **`logging`**: logs pertinents
 - **`redis`** / **`valkey`**: cache
+- **`websocket`**: websocket
 
 ## 📁 Structure générée
 
