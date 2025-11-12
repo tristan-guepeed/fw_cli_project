@@ -2,15 +2,12 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
-from rich.table import Table
 from rich.prompt import IntPrompt
-from typing import List, Dict, Any
+from typing import List
 import os
-import json
-from pathlib import Path
 
 from .modules import ModuleManager
-from .generator import ProjectGenerator
+from .generator.generator   import ProjectGenerator
 
 console = Console()
 app = typer.Typer(

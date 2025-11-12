@@ -3,8 +3,6 @@ Système de gestion des modules FastWizard
 """
 from typing import Dict, List, Any
 from dataclasses import dataclass
-from pathlib import Path
-import json
 
 @dataclass
 class ModuleInfo:
