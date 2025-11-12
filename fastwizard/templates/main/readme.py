@@ -66,7 +66,6 @@ def read_all(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return foods
 '''
 
-
         # Sections explicatives détaillées
         structure_details = '''
 
@@ -111,6 +110,24 @@ Le cache est configuré via `app/core/cache.py`. Modifiez les paramètres de con
 ## 📡 WebSocket
 
 Le module WebSocket est activé. Les routes WebSocket sont définies dans `app/domains/ws/router.py`.
+'''
+
+        # Mail module section
+        mail_section = ''
+        if "mail-brevo" in selected_modules or "mail-mailjet" in selected_modules:
+            mail_section = '''
+## 📧 Gestion des mails
+Le projet inclut un service d'envoi d'emails via
+'''
+            if "mail-brevo" in selected_modules:
+                mail_section += '- Brevo (ex-Sendinblue) via `app/domains/mails/brevo_service.py`\n'
+            if "mail-mailjet" in selected_modules:
+                mail_section += '- Mailjet via `app/domains/mails/mailjet_service.py`\n'
+            mail_section += '''
+Configurez les clés API dans le fichier `.env` :
+- Pour Brevo : `BREVO_API_KEY`
+- Pour Mailjet : `MAILJET_API_KEY` et `MAILJET_API_SECRET`
+Utilisez le service mail dans vos routes ou services pour envoyer des emails.
 '''
 
         # Ajouter un rappel migrations dans démarrage rapide si DB active

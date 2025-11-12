@@ -39,6 +39,16 @@ def get_main_template(project_name: str, selected_modules: List[str]) -> str:
         imports.append("from app.domains.ws.router import router as ws_router")
         router_includes.append("app.include_router(ws_router, prefix='/ws', tags=['ws'])")
 
+    # Inclusion du router Brevo si le module est sélectionné
+    if "mail-brevo" in selected_modules:
+        imports.append("from app.domains.mails.brevo_router import router as brevo_router")
+        router_includes.append("app.include_router(brevo_router, prefix='/api/v1/brevo', tags=['mails'])")
+
+    # Inclusion du router Mailjet si le module est sélectionné
+    if "mail-mailjet" in selected_modules:
+        imports.append("from app.domains.mails.mailjet_router import router as mailjet_router")
+        router_includes.append("app.include_router(mailjet_router, prefix='/api/v1/mailjet', tags=['mails'])")
+
     # Ajouter import pour inclusion dynamique
     imports.append("import importlib")
     imports.append("from pathlib import Path")

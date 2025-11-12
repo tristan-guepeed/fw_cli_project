@@ -299,6 +299,52 @@ class ModuleManager:
             config={}
         )
 
+        # Module Brevo
+        modules["mail-brevo"] = ModuleInfo(
+            id="mail-brevo",
+            name="Gestion de mails Brevo",
+            description="Module d'envoi d'emails via Brevo (ex-Sendinblue)",
+            dependencies=["brevo-python", "requests"],
+            files=[
+                {
+                    "path": "app/domains/mails/brevo_service.py",
+                    "template": "mails/brevo/brevo_service.py"
+                },
+                {
+                    "path": "app/domains/mails/brevo_router.py",
+                    "template": "mails/brevo/brevo_router.py"
+                }
+            ],
+            config={
+                "api_key": "YOUR_BREVO_API_KEY",
+                "sender_email": "example@example.com",
+                "sender_name": "Mon Application"
+            }
+        )
+
+        # Module Mailjet
+        modules["mail-mailjet"] = ModuleInfo(
+            id="mail-mailjet",
+            name="Gestion de mails Mailjet",
+            description="Module d'envoi d'emails via Mailjet",
+            dependencies=["mailjet_rest"],  # dépendance officielle Python Mailjet
+            files=[
+                {
+                    "path": "app/domains/mails/mailjet_service.py",
+                    "template": "mails/mailjet/mailjet_service.py"
+                },
+                {
+                    "path": "app/domains/mails/mailjet_router.py",
+                    "template": "mails/mailjet/mailjet_router.py"
+                }
+            ],
+            config={
+                "api_key": "YOUR_MAILJET_API_KEY",
+                "api_secret": "YOUR_MAILJET_SECRET",
+                "sender_email": "example@example.com",
+                "sender_name": "Mon Application"
+            }
+        )
 
         return modules
     

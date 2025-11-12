@@ -193,11 +193,31 @@ def select_modules() -> List[str]:
         console.print(f"✅ [green]{chosen_cache}[/green] ajouté\n")
     else:
         console.print("⏭️  [dim]Aucun système de cache sélectionné[/dim]\n")
+    
+    # === 3️⃣ Sélection du service email ===
+    mail_modules = [mid for mid in available_modules if mid.startswith("mail-")]
 
-    # === 3️⃣ Autres modules ===
+    if mail_modules and Confirm.ask("✉️ [bold]Souhaitez-vous intégrer un service email ?[/bold]", default=False):
+        console.print("\n📧 [bold cyan]Services email disponibles :[/bold cyan]")
+        for i, mid in enumerate(mail_modules, start=1):
+            console.print(f"  {i}. {available_modules[mid]['name']} ({mid})")
+        console.print()
+
+        choice = IntPrompt.ask(
+            "👉 [bold]Choisissez un service email (numéro)[/bold]",
+            choices=[str(i) for i in range(1, len(mail_modules) + 1)]
+        )
+        chosen_mail = mail_modules[int(choice) - 1]
+        selected.append(chosen_mail)
+        console.print(f"✅ [green]{chosen_mail}[/green] ajouté\n")
+    else:
+        console.print("⏭️  [dim]Aucun service email sélectionné[/dim]\n")
+
+    
+    # === 4️⃣ Autres modules ===
     for module_id, module_info in available_modules.items():
         # ignorer les modules déjà sélectionnés ou appartenant à des catégories spéciales
-        if module_id in db_modules or module_id in cache_modules:
+        if module_id in db_modules or module_id in cache_modules or module_id in mail_modules:
             continue
 
         if Confirm.ask(f"Inclure le module [bold cyan]{module_id}[/bold cyan] ?", default=False):

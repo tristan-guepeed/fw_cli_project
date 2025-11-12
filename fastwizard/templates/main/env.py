@@ -90,5 +90,28 @@ def generate_env_example(selected_modules: List[str], db_config: Optional[Dict] 
                 "LOG_BACKUP_COUNT=5",
                 "",
             ])
+        # --- Mail Brevo ---
+        if "mail-brevo" in selected_modules:
+            env_vars.extend([
+                "# ===============================",
+                "# ✉️ Configuration Brevo",
+                "# ===============================",
+                "BREVO_API_KEY=YOUR_BREVO_API_KEY",
+                "BREVO_SENDER_EMAIL=no-reply@example.com",
+                "BREVO_SENDER_NAME=FastAPI App",
+                "",
+            ])
+        # --- Mail Mailjet ---
+        if "mail-mailjet" in selected_modules:
+            env_vars.extend([
+                "# ===============================",
+                "# ✉️ Configuration Mailjet",
+                "# ===============================",
+                "MAILJET_API_KEY=YOUR_MAILJET_API_KEY",
+                "MAILJET_API_SECRET=YOUR_MAILJET_API_SECRET",
+                "MAILJET_SENDER_EMAIL=no-reply@example.com",
+                "MAILJET_SENDER_NAME=FastAPI App",
+                "",
+            ])
 
         return "\n".join(env_vars)
