@@ -72,6 +72,7 @@ fastwizard version
 - **`logging`**: logs pertinents
 - **`redis`** / **`valkey`**: cache
 - **`websocket`**: websocket
+- **`mails`**: gestion des mails via Brevo ou Mailjet
 
 ## 📁 Structure générée
 
