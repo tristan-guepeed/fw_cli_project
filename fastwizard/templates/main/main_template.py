@@ -49,6 +49,11 @@ def get_main_template(project_name: str, selected_modules: List[str]) -> str:
         imports.append("from app.domains.mails.mailjet_router import router as mailjet_router")
         router_includes.append("app.include_router(mailjet_router, prefix='/api/v1/mailjet', tags=['mails'])")
 
+    # Inclusion du router OAuth si le module est sélectionné
+    if "auth-oauth-google" in selected_modules or "auth-oauth-github" in selected_modules:
+        imports.append("from app.domains.oauth.oauth_router import router as oauth_router")
+        router_includes.append("app.include_router(oauth_router, prefix='/api/v1/oauth', tags=['oauth'])")
+
     # Ajouter import pour inclusion dynamique
     imports.append("import importlib")
     imports.append("from pathlib import Path")

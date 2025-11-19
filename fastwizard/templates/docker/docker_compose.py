@@ -8,9 +8,6 @@ def get_template(config):
     selected_modules = config.get("selected_modules", [])
     db_module = next((m for m in selected_modules if m.startswith("db-")), None)
     cache_module = next((m for m in selected_modules if m.startswith("cache-")), None)
-    
-    print(f"Selected DB module: {db_module}")
-    print(f"Selected Cache module: {cache_module}")
 
     # === Configuration Base de Données ===
     if db_module == "db-mysql":

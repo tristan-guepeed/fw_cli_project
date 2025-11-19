@@ -1,6 +1,34 @@
 """Template pour les services d'authentification"""
 def get_template(config):
-    return '''from fastapi import APIRouter, HTTPException, status
+    selected_modules = config.get("selected_modules", [])
+    oauth_module = next((m for m in selected_modules if m.startswith("auth-oauth")), None)
+
+    if oauth_module == "auth-oauth-google" or oauth_module == "auth-oauth-github":
+        oauth_functions = '''def get_user_by_email(db, email: str):
+    return db.query(User).filter(User.email == email).first()
+
+
+def create_user_google(db, email: str, google_id: str):
+    fake_password = secrets.token_urlsafe(32)  # mot de passe aléatoire
+    hashed_password = get_password_hash(fake_password)
+    user = User(
+        username=email.split("@")[0],
+        email=email,
+        hashed_password=hashed_password,
+        google_id=google_id,
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+''' 
+    else:
+        oauth_functions = ""
+
+
+
+    template='''from fastapi import APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
@@ -9,6 +37,7 @@ from app.domains.auth.schemas import (
     UserCreate, UserResponse, Token, TokenRefresh, 
     PasswordChange, UserUpdate
 )
+import secrets
 from app.domains.auth.jwt_handler import (
     verify_password, get_password_hash, create_token_pair, 
     verify_token
@@ -181,3 +210,5 @@ async def delete_user_service(user_id: int, current_user: User, db: Session) -> 
 
     return {"message": "Utilisateur supprimé avec succès"}
 '''
+
+    return template + oauth_functions

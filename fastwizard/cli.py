@@ -213,11 +213,30 @@ def select_modules() -> List[str]:
     else:
         console.print("⏭️  [dim]Aucun service email sélectionné[/dim]\n")
 
-    
-    # === 4️⃣ Autres modules ===
+   # === 4️⃣ Sélection du module OAuth2 ===
+    oauth_modules = [mid for mid in available_modules if mid.startswith("auth-oauth")]
+
+    if oauth_modules:
+        if Confirm.ask("🔐 [bold]Souhaitez-vous intégrer OAuth2 ?[/bold]", default=False):
+            console.print("\n🌍 [bold cyan]Providers OAuth disponibles :[/bold cyan]")
+            for i, mid in enumerate(oauth_modules, start=1):
+                console.print(f"  {i}. {available_modules[mid]['name']} ({mid})")
+            console.print()
+
+            choice = IntPrompt.ask(
+                "👉 [bold]Choisissez un provider OAuth (numéro)[/bold]",
+                choices=[str(i) for i in range(1, len(oauth_modules) + 1)]
+            )
+            chosen_oauth = oauth_modules[int(choice) - 1]
+            selected.append(chosen_oauth)
+            console.print(f"✅ [green]{chosen_oauth}[/green] ajouté\n")
+        else:
+            console.print("⏭️  [dim]Aucun provider OAuth sélectionné[/dim]\n")
+
+    # === 5️⃣ Sélection des autres modules ===
     for module_id, module_info in available_modules.items():
         # ignorer les modules déjà sélectionnés ou appartenant à des catégories spéciales
-        if module_id in db_modules or module_id in cache_modules or module_id in mail_modules:
+        if module_id in db_modules or module_id in cache_modules or module_id in mail_modules or module_id in oauth_modules:
             continue
 
         if Confirm.ask(f"Inclure le module [bold cyan]{module_id}[/bold cyan] ?", default=False):
