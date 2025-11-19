@@ -29,7 +29,7 @@ class ModuleManager:
             id="db-postgresql",
             name="Base de données PostgreSQL",
             description="Configuration PostgreSQL avec SQLAlchemy et Alembic",
-            dependencies=["sqlalchemy", "alembic", "psycopg2-binary"],
+            dependencies=["sqlalchemy==2.0.44", "alembic==1.17.2", "psycopg2-binary==2.9.11"],
             files=[
                 {
                     "path": "app/database.py",
@@ -59,7 +59,7 @@ class ModuleManager:
             id="db-mysql",
             name="Base de données MySQL",
             description="Configuration MySQL avec SQLAlchemy et Alembic",
-            dependencies=["sqlalchemy", "alembic", "mysqlclient"],
+            dependencies=["sqlalchemy==2.0.44", "alembic==1.17.2", "mysqlclient==2.2.7"],
             files=[
                 {
                     "path": "app/database.py",
@@ -89,7 +89,7 @@ class ModuleManager:
             id="auth-jwt",
             name="Authentification JWT",
             description="Système d'authentification complet avec JWT (register, login, refresh)",
-            dependencies=["python-jose[cryptography]", "passlib[bcrypt]", "python-multipart", "email-validator"],
+            dependencies=["python-jose[cryptography]==3.5.0", "passlib[bcrypt]==1.7.4", "python-multipart==0.0.20", "email-validator==2.3.0"],
             files=[
                 {
                     "path": "app/domains/auth/jwt_handler.py",
@@ -152,7 +152,7 @@ class ModuleManager:
             id="cors",
             name="CORS",
             description="Active et configure CORS pour l'API (origines, headers, méthodes).",
-            dependencies=["fastapi"],
+            dependencies=[],
             files=[
                 {
                     "path": "app/core/cors.py",
@@ -222,7 +222,7 @@ class ModuleManager:
             id="linting",
             name="Linting et formatage",
             description="Configuration des outils de linting et formatage (ruff + import sorter)",
-            dependencies=["ruff", "black", "pre-commit"],
+            dependencies=["ruff==0.14.5", "black==25.11.0", "pre-commit==4.4.0"],
             files=[
                 {
                     "path": "pyproject.toml",
@@ -236,7 +236,7 @@ class ModuleManager:
             id="logging",
             name="Logging",
             description="Configuration des outils de logging (loguru)",
-            dependencies=["loguru", "rich"],
+            dependencies=["loguru==0.7.3", "rich==14.2.0"],
             files=[
                 {
                     "path": "app/core/logging.py",
@@ -251,7 +251,7 @@ class ModuleManager:
             id="cache-redis",
             name="Cache Redis",
             description="Intégration de Redis pour le cache, les sessions et les tâches en arrière-plan.",
-            dependencies=["redis"],
+            dependencies=["redis==7.0.1"],
             files=[
                 {
                     "path": "app/core/cache.py",
@@ -268,7 +268,7 @@ class ModuleManager:
             id="cache-valkey",
             name="Cache Valkey",
             description="Intégration de Valkey (compatible Redis) pour la gestion du cache.",
-            dependencies=["redis"],
+            dependencies=["redis==7.0.1"],
             files=[
                 {
                     "path": "app/core/cache.py",
@@ -304,7 +304,7 @@ class ModuleManager:
             id="mail-brevo",
             name="Gestion de mails Brevo",
             description="Module d'envoi d'emails via Brevo (ex-Sendinblue)",
-            dependencies=["brevo-python", "requests"],
+            dependencies=["brevo-python==1.2.0", "requests==2.32.5"],
             files=[
                 {
                     "path": "app/domains/mails/brevo_service.py",
@@ -327,7 +327,7 @@ class ModuleManager:
             id="mail-mailjet",
             name="Gestion de mails Mailjet",
             description="Module d'envoi d'emails via Mailjet",
-            dependencies=["mailjet_rest"],  # dépendance officielle Python Mailjet
+            dependencies=["mailjet_rest==1.5.1"],
             files=[
                 {
                     "path": "app/domains/mails/mailjet_service.py",
@@ -351,7 +351,7 @@ class ModuleManager:
             id="auth-oauth-google",
             name="OAuth2 Google",
             description="Module OAuth2 pour Google, permet à l'utilisateur de se connecter via son compte Google.",
-            dependencies=["httpx", "python-dotenv"],
+            dependencies=["httpx==0.28.1"],
             files=[
                 {
                     "path": "app/domains/oauth/oauth_provider.py",

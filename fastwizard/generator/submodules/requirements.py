@@ -4,9 +4,9 @@ def generate_requirements(module_manager, selected_modules: List[str]) -> str:
     """Génère le fichier requirements.txt"""
     
     base_requirements = [
-        "fastapi>=0.104.0",
+        "fastapi>=0.121.2",
         "uvicorn[standard]>=0.24.0",
-        "python-dotenv>=1.0.0",
+        "python-dotenv>=1.2.1",
         "pydantic-settings>=2.11.0",
     ]
     

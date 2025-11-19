@@ -1,6 +1,5 @@
 """Template pour docker-compose.yml"""
 def get_template(config):
-    print(config)
     port = config.get("port", 8000)
     adminer_port = config.get("adminer_port", 8080)
     

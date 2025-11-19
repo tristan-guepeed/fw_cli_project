@@ -19,6 +19,44 @@ app = typer.Typer(
 module_manager = ModuleManager()
 project_generator = ProjectGenerator()
 
+import subprocess
+import re
+
+def check_requirements_updates(requirements_file="requirements.txt"):
+    updates_available = []
+
+    with open(requirements_file) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            # Extraire nom du package et version si spécifiée
+            match = re.match(r"([a-zA-Z0-9_\-\[\]]+)([<>=!~]+[\d\w\.\*]+)?", line)
+            if not match:
+                continue
+            package_name, current_version = match.groups()
+            current_version = current_version or ""
+
+            # Vérifier les versions disponibles via pip index
+            try:
+                result = subprocess.run(
+                    ["pip", "index", "versions", package_name],
+                    capture_output=True, text=True, check=True
+                )
+                # pip index versions <pkg> renvoie une ligne contenant la version la plus récente
+                available_versions = re.findall(r"Available versions: (.+)", result.stdout)
+                if available_versions:
+                    latest_version = available_versions[0].split(",")[0].strip()
+                    if current_version and latest_version != current_version.lstrip("=<>!~"):
+                        updates_available.append(f"{package_name}: {current_version} -> {latest_version}")
+            except subprocess.CalledProcessError:
+                continue
+
+    return updates_available
+# Exemple d'utilisation juste avant ton "Prochaines étapes"updates = check_requirements_updates(os.path.join(project_name, "requirements.txt"))if updates:    console.print("\n⚠️ [bold yellow]Des mises à jour sont disponibles pour certains packages :[/bold yellow]")    for u in updates:        console.print(f"  - {u}")    console.print("⚠️ Attention : mettre à jour ces packages peut casser le projet généré.\n")
+
+
 @app.command()
 def new():
     """
@@ -64,6 +102,14 @@ def new():
         project_generator.generate_project(project_name, selected_modules)
         console.print(f"\n🎉 [bold green]Projet '{project_name}' généré avec succès ![/bold green]")
         console.print(f"📁 Dossier : [cyan]{os.path.abspath(project_name)}[/cyan]")
+
+        # Exemple d'utilisation juste avant ton "Prochaines étapes"
+        updates = check_requirements_updates(os.path.join(project_name, "requirements.txt"))
+        if updates:
+            console.print("\n⚠️ [bold yellow]Des mises à jour sont disponibles pour certains packages :[/bold yellow]")
+            for u in updates:
+                console.print(f"  - {u}")
+            console.print("⚠️ Attention : mettre à jour ces packages peut casser le projet généré.\n")
         console.print("\n🚀 [bold]Prochaines étapes :[/bold]")
         console.print(f"   cd {project_name}")
         console.print("   pip install -r requirements.txt")
