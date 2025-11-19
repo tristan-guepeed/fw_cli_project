@@ -54,7 +54,6 @@ def check_requirements_updates(requirements_file="requirements.txt"):
                 continue
 
     return updates_available
-# Exemple d'utilisation juste avant ton "Prochaines étapes"updates = check_requirements_updates(os.path.join(project_name, "requirements.txt"))if updates:    console.print("\n⚠️ [bold yellow]Des mises à jour sont disponibles pour certains packages :[/bold yellow]")    for u in updates:        console.print(f"  - {u}")    console.print("⚠️ Attention : mettre à jour ces packages peut casser le projet généré.\n")
 
 
 @app.command()
