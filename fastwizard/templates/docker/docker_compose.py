@@ -100,6 +100,7 @@ services:
       - PYTHONUNBUFFERED=1  # ✅ Désactive le buffering pour voir les logs en temps réel
     volumes:
       - .:/app
+      - ./logs:/app/logs
     restart: unless-stopped
     depends_on:
       {depends_block}
@@ -143,6 +144,7 @@ services:
 
     # === Volumes et réseau ===
     compose += "\nvolumes:\n"
+    compose += "  logs_data:\n"
     if db_image:
         compose += f"  {volume_declare}\n"
     if cache_module == "cache-redis":
