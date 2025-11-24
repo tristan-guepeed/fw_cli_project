@@ -51,13 +51,12 @@ def get_main_template(project_name: str, selected_modules: List[str]) -> str:
 
     # Inclusion du router OAuth si le module est sélectionné
     if "auth-oauth-google" in selected_modules:
-        imports.append("from app.domains.oauth.google.oauth_router import router as oauth_router")
-        router_includes.append("app.include_router(oauth_router, prefix='/api/v1/oauth', tags=['oauth'])")
+        imports.append("from app.domains.oauth.google.oauth_router import router as google_oauth_router")
+        router_includes.append("app.include_router(google_oauth_router, prefix='/api/v1/google_oauth', tags=['google_oauth'])")
 
     if "auth-oauth-github" in selected_modules:
-        imports.append("from app.domains.oauth.github.oauth_router import router as oauth_router")
-        router_includes.append("app.include_router(oauth_router, prefix='/api/v1/oauth', tags=['oauth'])")
-
+        imports.append("from app.domains.oauth.github.oauth_router import router as github_oauth_router")
+        router_includes.append("app.include_router(github_oauth_router, prefix='/api/v1/github_oauth', tags=['github_oauth'])")
     # Ajouter import pour inclusion dynamique
     imports.append("import importlib")
     imports.append("from pathlib import Path")

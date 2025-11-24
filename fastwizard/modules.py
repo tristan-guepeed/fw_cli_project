@@ -373,7 +373,7 @@ class ModuleManager:
                 "user_info_url": "https://www.googleapis.com/oauth2/v3/userinfo",
                 "client_id": "YOUR_GOOGLE_CLIENT_ID",
                 "client_secret": "YOUR_GOOGLE_CLIENT_SECRET",
-                "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
+                "redirect_uri": "http://localhost:8000/api/v1/google_oauth/callback"
             }
         )
         
@@ -405,7 +405,7 @@ class ModuleManager:
                 "user_info_url": "https://api.github.com/user",
                 "client_id": "YOUR_GITHUB_CLIENT_ID",
                 "client_secret": "YOUR_GITHUB_CLIENT_SECRET",
-                "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
+                "redirect_uri": "http://localhost:8000/api/v1/github_oauth/callback"
             }
         )
 

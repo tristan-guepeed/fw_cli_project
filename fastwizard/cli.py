@@ -268,15 +268,22 @@ def select_modules() -> List[str]:
                 console.print(f"  {i}. {available_modules[mid]['name']} ({mid})")
             console.print()
 
-            choice = IntPrompt.ask(
-                "👉 [bold]Choisissez un provider OAuth (numéro)[/bold]",
-                choices=[str(i) for i in range(1, len(oauth_modules) + 1)]
+            choices = Prompt.ask(
+                "👉 [bold]Choisissez un ou plusieurs providers OAuth (numéros séparés par des virgules)[/bold]",
+                default="",
             )
-            chosen_oauth = oauth_modules[int(choice) - 1]
-            selected.append(chosen_oauth)
-            console.print(f"✅ [green]{chosen_oauth}[/green] ajouté\n")
-        else:
-            console.print("⏭️  [dim]Aucun provider OAuth sélectionné[/dim]\n")
+
+            if choices:
+                for choice in choices.split(","):
+                    choice = choice.strip()
+                    if choice.isdigit() and 1 <= int(choice) <= len(oauth_modules):
+                        chosen_oauth = oauth_modules[int(choice) - 1]
+                        if chosen_oauth not in selected:
+                            selected.append(chosen_oauth)
+                            console.print(f"✅ [green]{chosen_oauth}[/green] ajouté")
+                console.print()
+            else:
+                console.print("⏭️  [dim]Aucun provider OAuth sélectionné[/dim]\n")
 
     # === 5️⃣ Sélection des autres modules ===
     for module_id, module_info in available_modules.items():

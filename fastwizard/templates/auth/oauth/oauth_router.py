@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.domains.auth.jwt_handler import create_token_pair
 from app.database import get_db
 from app.domains.oauth.{provider}.oauth_services import get_or_create_oauth_user
-from app.domains.auth.services import get_user_by_email, create_user_google
+from app.domains.auth.services import get_user_by_email
 import requests
 import httpx
 
@@ -58,12 +58,13 @@ async def oauth_callback(code: str, db: Session = Depends(get_db)):
         ).json()
         email = user_info.get("email")
         oauth_id = user_info.get("sub")
+        username = user_info.get("name")
         if not email:
             raise HTTPException(status_code=400, detail="Google email not available")
 
         user = get_user_by_email(db, email=email)
         if not user:
-            user = create_user_google(db, email=email, google_id=oauth_id)
+           user = await get_or_create_oauth_user(email=email, username=username, provider="google", oauth_id=oauth_id, db=db)
 
     elif PROVIDER.lower() == "github":
         # Échange code → token

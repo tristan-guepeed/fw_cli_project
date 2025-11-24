@@ -7,21 +7,6 @@ def get_template(config):
         oauth_functions = '''def get_user_by_email(db, email: str):
     return db.query(User).filter(User.email == email).first()
 
-
-def create_user_google(db, email: str, google_id: str):
-    fake_password = secrets.token_urlsafe(32)  # mot de passe aléatoire
-    hashed_password = get_password_hash(fake_password)
-    user = User(
-        username=email.split("@")[0],
-        email=email,
-        hashed_password=hashed_password,
-        google_id=google_id,
-        is_active=True
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
 ''' 
     else:
         oauth_functions = ""
