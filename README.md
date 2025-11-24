@@ -73,7 +73,7 @@ fastwizard version
 - **`redis`** / **`valkey`**: cache
 - **`websocket`**: websocket
 - **`mails`**: gestion des mails via Brevo ou Mailjet
-- **`oauth`**: connexion avec google
+- **`oauth`**: connexion avec google / github
 
 ## 📁 Structure générée
 

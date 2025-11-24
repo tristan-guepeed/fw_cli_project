@@ -10,6 +10,12 @@ def get_template(config):
     oauth_account_created_at = Column(DateTime, nullable=True)
     google_id = Column(String, nullable=True, unique=True)
 '''
+    elif oauth_module == "auth-oauth-github":
+        oauth_functions = '''
+    oauth_provider = Column(String, nullable=True)
+    oauth_account_created_at = Column(DateTime, nullable=True)
+    github_id = Column(String, nullable=True, unique=True)
+'''
     else:
         oauth_functions = ''
     return '''from sqlalchemy import Column, Integer, String, Boolean, DateTime

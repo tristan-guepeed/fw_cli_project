@@ -354,15 +354,15 @@ class ModuleManager:
             dependencies=["httpx==0.28.1"],
             files=[
                 {
-                    "path": "app/domains/oauth/oauth_provider.py",
+                    "path": "app/domains/oauth/google/oauth_provider.py",
                     "template": "auth/oauth/oauth_provider.py"
                 },
                 {
-                    "path": "app/domains/oauth/oauth_services.py",
+                    "path": "app/domains/oauth/google/oauth_services.py",
                     "template": "auth/oauth/oauth_services.py"
                 },
                 {
-                    "path": "app/domains/oauth/oauth_router.py",
+                    "path": "app/domains/oauth/google/oauth_router.py",
                     "template": "auth/oauth/oauth_router.py"
                 }
             ],
@@ -379,35 +379,35 @@ class ModuleManager:
         
 
         # Module OAuth GitHub
-        #modules["auth-oauth-github"] = ModuleInfo(
-        #    id="auth-oauth-github",
-        #    name="OAuth2 GitHub",
-        #    description="Module OAuth2 pour GitHub, permet à l'utilisateur de se connecter via son compte GitHub.",
-        #    dependencies=["httpx", "python-dotenv"],
-        #    files=[
-        #        {
-        #            "path": "app/domains/oauth/oauth_provider.py",
-        #            "template": "auth/oauth/oauth_provider.py"
-        #        },
-        #        {
-        #            "path": "app/domains/oauth/oauth_services.py",
-        #            "template": "auth/oauth/oauth_services.py"
-        #        },
-        #        {
-        #            "path": "app/domains/oauth/oauth_router.py",
-        #            "template": "auth/oauth/oauth_router.py"
-        #        }
-        #    ],
-        #    config={
-        #        "provider": "github",
-        #        "auth_url": "https://github.com/login/oauth/authorize",
-        #        "token_url": "https://github.com/login/oauth/access_token",
-        #        "user_info_url": "https://api.github.com/user",
-        #        "client_id": "YOUR_GITHUB_CLIENT_ID",
-        #        "client_secret": "YOUR_GITHUB_CLIENT_SECRET",
-        #        "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
-        #    }
-        #)
+        modules["auth-oauth-github"] = ModuleInfo(
+            id="auth-oauth-github",
+            name="OAuth2 GitHub",
+            description="Module OAuth2 pour GitHub, permet à l'utilisateur de se connecter via son compte GitHub.",
+            dependencies=["httpx", "python-dotenv"],
+            files=[
+                {
+                    "path": "app/domains/oauth/github/oauth_provider.py",
+                    "template": "auth/oauth/oauth_provider.py"
+                },
+                {
+                    "path": "app/domains/oauth/github/oauth_services.py",
+                    "template": "auth/oauth/oauth_services.py"
+                },
+                {
+                    "path": "app/domains/oauth/github/oauth_router.py",
+                    "template": "auth/oauth/oauth_router.py"
+                }
+            ],
+            config={
+                "provider": "github",
+                "auth_url": "https://github.com/login/oauth/authorize",
+                "token_url": "https://github.com/login/oauth/access_token",
+                "user_info_url": "https://api.github.com/user",
+                "client_id": "YOUR_GITHUB_CLIENT_ID",
+                "client_secret": "YOUR_GITHUB_CLIENT_SECRET",
+                "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
+            }
+        )
 
         return modules
     

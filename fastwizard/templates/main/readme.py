@@ -135,7 +135,7 @@ Utilisez le service mail dans vos routes ou services pour envoyer des emails.
         if any(m.startswith('auth-oauth') for m in selected_modules):
             oauth_section = '''
 ## 🔐 Authentification OAuth
-Le module d'authentification OAuth est activé. Configurez les fournisseurs OAuth dans `app/core/config.py` et implémentez les routes nécessaires dans `app/domains/oauth/router.py`.
+Le module d'authentification OAuth est activé. Configurez les fournisseurs OAuth dans `app/core/config.py` et implémentez les routes nécessaires dans `app/domains/oauth/{provider}/router.py`.
 '''
 
         # Ajouter un rappel migrations dans démarrage rapide si DB active
