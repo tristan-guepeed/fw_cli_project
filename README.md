@@ -87,6 +87,7 @@ mon-projet-fastapi/
 │   ├── models/          # Modèles de données
 │   ├── routers/         # Routeurs FastAPI
 │   ├── schemas/         # Schémas Pydantic
+│── logs/
 ├── tests/               # Tests unitaires
 ├── main.py              # Point d'entrée
 ├── requirements.txt     # Dépendances
