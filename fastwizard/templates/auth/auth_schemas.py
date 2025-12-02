@@ -95,4 +95,20 @@ class PasswordChange(BaseModel):
         if len(v) < 8:
             raise ValueError("Le nouveau mot de passe doit contenir au moins 8 caractères")
         return v
+
+class RoleBase(BaseModel):
+    name: str
+
+class RoleCreate(RoleBase):
+    pass
+
+class RoleUpdate(RoleBase):
+    pass
+
+class RoleResponse(RoleBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
 '''

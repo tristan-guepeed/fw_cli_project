@@ -3,6 +3,7 @@ def get_template(config):
     return '''from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from app.domains.auth.dependencies import get_current_active_user
 from typing import List
 from app.database import get_db
 from app.domains.auth.model import User
@@ -11,8 +12,8 @@ from app.domains.auth.schemas import (
     PasswordChange, UserUpdate
 )
 from app.domains.auth.dependencies import get_current_active_user, get_current_admin_user
-from app.domains.auth.services import register_user_service, login_user_service, refresh_token_service, update_current_user_service, change_password_service, delete_user_service
-
+from app.domains.auth.services import register_user_service, login_user_service, refresh_token_service, update_current_user_service, change_password_service, delete_user_service, create_role, get_roles, get_role, update_role, delete_role
+from app.domains.auth.schemas import RoleCreate, RoleUpdate, RoleResponse
 
 router = APIRouter()
 
@@ -74,4 +75,24 @@ async def delete_user(
 ):
     """Supprime un utilisateur (admin seulement)."""
     return await delete_user_service(user_id, current_user, db)
+
+@router.post("/roles/", response_model=RoleResponse)
+def api_create_role(role: RoleCreate, db: Session = Depends(get_db), current_user : User = Depends(get_current_admin_user)):
+    return create_role(db, role)
+
+@router.get("/roles/", response_model=list[RoleResponse])
+def api_get_roles(db: Session = Depends(get_db)):
+    return get_roles(db)
+
+@router.get("/roles/{role_id}", response_model=RoleResponse)
+def api_get_role(role_id: int, db: Session = Depends(get_db)):
+    return get_role(db, role_id)
+
+@router.put("/roles/{role_id}", response_model=RoleResponse)
+def api_update_role(role_id: int, role: RoleUpdate, db: Session = Depends(get_db), current_user : User = Depends(get_current_admin_user)):
+    return update_role(db, role_id, role)
+
+@router.delete("/roles/{role_id}")
+def api_delete_role(role_id: int, db: Session = Depends(get_db), current_user : User = Depends(get_current_admin_user)):
+    return delete_role(db, role_id)
 '''

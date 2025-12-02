@@ -309,6 +309,21 @@ def select_modules() -> List[str]:
 
                     if not Confirm.ask("Voulez-vous créer un autre module CRUD ?", default=False):
                         break
+
+            if module_id == "auth-permissions":
+                roles_custom = []
+                console.print("\n🎭 [bold]Module Permissions détecté :[/bold] ajout de rôles personnalisés")
+                while True:
+                    role_name = Prompt.ask("👉 Entrez un rôle personnalisé (laisser vide pour terminer)", default="")
+                    role_name = role_name.strip()
+                    if role_name:
+                        roles_custom.append(role_name)
+                        console.print(f"✅ Rôle '{role_name}' ajouté")
+                    else:
+                        break
+                if roles_custom:
+                    ProjectGenerator.CUSTOM_ROLES = {"roles": roles_custom}
+                    console.print(f"\n✅ Rôles personnalisés enregistrés : {roles_custom}\n")
         else:
             console.print(f"⏭️  [dim]{module_id}[/dim] ignoré")
         console.print()

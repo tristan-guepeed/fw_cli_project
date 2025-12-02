@@ -14,6 +14,8 @@ def create_base_structure(project_path: Path):
         "app/domains",
         "tests",
         "logs",
+        "alembic",
+        "alembic/versions",
     ]
 
     for directory in directories:

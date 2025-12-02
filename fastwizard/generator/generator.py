@@ -10,7 +10,6 @@ from ..modules import ModuleManager
 
 from .submodules.base_structure import create_base_structure
 from .submodules.main_files import generate_main_files
-from fastwizard.templates.database.alembic_mig import get_initial_migration
 
 
 console = Console()
@@ -26,6 +25,7 @@ class ProjectGenerator:
     # Variables globales pour stocker les configurations
     CRUD_ENTITIES = {}
     DB_CONFIG = {}
+    CUSTOM_ROLES = {}
     
     def generate_project(self, project_name: str, selected_modules: List[str]):
         """Génère un projet FastAPI complet"""
@@ -33,6 +33,7 @@ class ProjectGenerator:
         # Récupérer les configurations depuis les variables globales
         db_config = getattr(ProjectGenerator, 'DB_CONFIG', {})
         crud_entities = getattr(ProjectGenerator, 'CRUD_ENTITIES', [])
+        custom_roles = getattr(ProjectGenerator, 'CUSTOM_ROLES', {})
         
         # Validation des modules
         warnings = self.module_manager.validate_module_combinations(selected_modules)
@@ -104,21 +105,20 @@ class ProjectGenerator:
                 
                         file_path = module_dir / dest_file_name
                         file_path.write_text(template_content)
-
             else:
                 for file_info in module.files:
                     file_path = project_path / file_info["path"]
                     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-                    # Pour l'instant, on crée des fichiers de base
-                    # Dans une version complète, on utiliserait des templates
+                    # On construit la config et on y injecte les rôles personnalisés
                     config = {**module.config, "selected_modules": selected_modules}
+                    if hasattr(ProjectGenerator, "CUSTOM_ROLES"):
+                        config["custom_roles"] = ProjectGenerator.CUSTOM_ROLES.get("roles", [])
+
+                    # Générer le contenu du template
                     template_content = self._get_template_content(file_info["template"], config)   
                     file_path.write_text(template_content)
 
-                # Si base de données PostgreSQL sélectionnée, créer une migration initiale Alembic
-                if module_id == "db-postgresql" or module_id == "db-mysql":
-                    get_initial_migration(project_path, include_user=("auth-jwt" in selected_modules))
 
     
     def _get_template_content(self, template_name: str, config: Dict[str, Any]) -> str:

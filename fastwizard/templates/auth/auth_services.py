@@ -16,11 +16,12 @@ def get_template(config):
     template='''from fastapi import APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from app.domains.auth.model import Role
 from typing import List
 from app.domains.auth.model import User
 from app.domains.auth.schemas import (
     UserCreate, UserResponse, Token, TokenRefresh, 
-    PasswordChange, UserUpdate
+    PasswordChange, UserUpdate, RoleCreate, RoleUpdate
 )
 import secrets
 from app.domains.auth.jwt_handler import (
@@ -29,7 +30,7 @@ from app.domains.auth.jwt_handler import (
 )
 
 async def register_user_service(user: UserCreate, db: Session) -> UserResponse:
-    """Logique d'enregistrement d'un nouvel utilisateur"""
+    """Logique d'enregistrement d'un nouvel utilisateur avec role par défaut 'user'."""
 
     # Vérifier si l'utilisateur existe déjà
     if db.query(User).filter(User.username == user.username).first():
@@ -44,12 +45,21 @@ async def register_user_service(user: UserCreate, db: Session) -> UserResponse:
             detail="L'email est déjà utilisé"
         )
 
+    # Récupérer le rôle 'user' par défaut
+    default_role = db.query(Role).filter(Role.name == "user").first()
+    if not default_role:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Le rôle par défaut 'user' n'existe pas dans la base"
+        )
+
     # Créer le nouvel utilisateur
     hashed_password = get_password_hash(user.password)
     db_user = User(
         username=user.username,
         email=user.email,
-        hashed_password=hashed_password
+        hashed_password=hashed_password,
+        role_id=default_role.id  # rôle par défaut
     )
 
     db.add(db_user)
@@ -194,6 +204,55 @@ async def delete_user_service(user_id: int, current_user: User, db: Session) -> 
     db.commit()
 
     return {"message": "Utilisateur supprimé avec succès"}
+
+def create_role(db: Session, role_data: RoleCreate) -> Role:
+    existing = db.query(Role).filter(Role.name == role_data.name).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role already exists"
+        )
+    role = Role(name=role_data.name)
+    db.add(role)
+    db.commit()
+    db.refresh(role)
+    return role
+
+def get_roles(db: Session):
+    return db.query(Role).all()
+
+def get_role(db: Session, role_id: int):
+    role = db.query(Role).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not found"
+        )
+    return role
+
+def update_role(db: Session, role_id: int, role_data: RoleUpdate):
+    role = db.query(Role).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not found"
+        )
+    role.name = role_data.name
+    db.commit()
+    db.refresh(role)
+    return role
+
+def delete_role(db: Session, role_id: int):
+    role = db.query(Role).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not found"
+        )
+    db.delete(role)
+    db.commit()
+    return {"message": "Role deleted successfully"}
+
 '''
 
     return template + oauth_functions

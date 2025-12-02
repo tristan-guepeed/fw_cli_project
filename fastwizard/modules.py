@@ -46,7 +46,11 @@ class ModuleManager:
                 {
                     "path": "alembic/script.py.mako",
                     "template": "database/alembic_script_mako.py"
-                }
+                },
+                {
+                    "path": "alembic/versions/initial_migration.py",
+                    "template": "database/alembic_init_mig.py"
+                },
             ],
             config={
                 "database_url": "postgresql://user:password@localhost/dbname",
@@ -76,7 +80,11 @@ class ModuleManager:
                 {
                     "path": "alembic/script.py.mako",
                     "template": "database/alembic_script_mako.py"
-                }
+                },
+                {
+                    "path": "alembic/versions/initial_migration.py",
+                    "template": "database/alembic_init_mig.py"
+                },
             ],
             config={
                 "database_url": "mysql://user:password@localhost/dbname",
@@ -89,7 +97,7 @@ class ModuleManager:
             id="auth-jwt",
             name="Authentification JWT",
             description="Système d'authentification complet avec JWT (register, login, refresh)",
-            dependencies=["python-jose[cryptography]==3.5.0", "passlib[bcrypt]==1.7.4", "python-multipart==0.0.20", "email-validator==2.3.0"],
+            dependencies=["python-jose[cryptography]==3.5.0", "passlib[bcrypt]==1.7.4", "bcrypt==4.0.1","python-multipart==0.0.20", "email-validator==2.3.0"],
             files=[
                 {
                     "path": "app/domains/auth/jwt_handler.py",
